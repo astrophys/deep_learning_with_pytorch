@@ -1,15 +1,25 @@
 Chapter 1 : Introducing deep learning and the Pytorch Library
 =============================================
-1. The deep learning revolution 4
-#. PyTorch for deep learning 6
-#. Why PyTorch? 7
-    a) The deep learning competitive landscape 8
+1. The deep learning revolution
+    a) Deep learning is a general class of algorithms that are able to approximate
+       complicated, nonlinear processes very, very effectively,
+    #) Advantages (see \ref{fig1.1}
+        #. Traditionally
+            * data scientist hand-crafted engineered features
+        #. Deep learning
+            * feed in the raw data and it extracts hierarchical features automatically
+        #. ![Fig 1.1 - handcrafted features vs increased data reqs\label{fig1.1}](figs/fig_1.1.png)
+#. PyTorch for deep learning 
+#. Why PyTorch? 
+    a) The deep learning competitive landscape
 #. An overview of how PyTorch supports deep learning
-    a) projects 10
-#. Hardware and software requirements 13
-    a) Using Jupyter Notebooks 14
-#. Exercises 15
-#. Summary 15
+    a) projects 
+    #) ![Fig 1.1 - handcrafted features vs increased data reqs\label{fig1.1}](figs/fig_1.1.png)
+#. Hardware and software requirements
+    a) Using Jupyter Notebooks
+#. Exercises
+#. Summary
+
 
 Chapter 2 : Pre-trained Methods
 =============================================
@@ -23,6 +33,7 @@ The GAN game 28 CycleGAN 29 A network that turns
 horses into zebras 30
 #. A pretrained network that describes scenes 33
 #. Torch Hub
+
 
 Chapter 3 : It starts with a tensor
 =============================================
@@ -50,6 +61,7 @@ Managing a tensor’s device attribute 63
 #. Serializing tensors 66
 Serializing to HDF5 with h5py 67
 
+
 Chapter 4 : Real-world data representation using tensors
 =============================================
 1. Working with images 71
@@ -67,6 +79,7 @@ period 89 Ready for training 90
 #. Representing text 93
 Converting text to numbers 94 One-hot-encoding characters 94
 
+
 Chapter 5 : The mechanics of learning
 =============================================
 The mechanics of learning 103
@@ -82,6 +95,7 @@ the model 116 Normalizing inputs 119 Visualizing
 #. PyTorch’s autograd: Backpropagating all things 123
 Computing the gradient automatically 123 Optimizers a la
 
+
 Chapter 6 : Using a nerual network to fit the data 
 =============================================
 1. Artificial neurons 142
@@ -95,6 +109,7 @@ model 153
 #. Finally a neural network 158
 Replacing the linear model 158 Inspecting the parameters 159
 
+
 Chapter 7 : Telling birds from airplanes : Learning from images
 =============================================
 1. A dataset of tiny images 165
@@ -104,6 +119,7 @@ Dataset transforms 168 Normalizing data 170
 Building the dataset 173 A fully connected model 174
 Output of a classifier 175 Representing the output as
 probabilities 176 A loss for classifying 180 Training the
+
 
 Chapter 8 : Using convolutions to generalize
 =============================================
@@ -124,6 +140,7 @@ Adding memory capacity: Width 218 Helping our model to
 converge and generalize: Regularization 219 Going deeper to
 learn more complex structures: Depth 223 Comparing the designs
 
+
 Chapter 9 : Using PyTorch to fight cancer
 =============================================
 1. Introduction to the use case 236
@@ -132,6 +149,7 @@ Chapter 9 : Using PyTorch to fight cancer
 #. The project: An end-to-end detector for lung cancer Why can’t we just throw data at a neural network until it
 works? 245 What is a nodule? 249 Our data source:
 The LUNA Grand Challenge 251 Downloading the LUNA
+
 
 Chapter 10 : Combining data sources into a unified dataset
 =============================================
@@ -148,6 +166,7 @@ addresses 268 Extracting a nodule from a CT scan 270
 Caching candidate arrays with the getCtRawCandidate
 function 274 Constructing our dataset in LunaDataset
 .__init__ 275 A training/validation split 275 Rendering
+
 
 Chapter 11 : Training a classificaiton model to detect suspected tumors
 =============================================
@@ -172,6 +191,7 @@ done, right? 308
 Running TensorBoard 309 Adding TensorBoard support to the
 metrics logging function 313
 #. Why isn’t the model learning to detect nodules? 315
+
 
 Chapter 12 : Improving training with metrics and augmentation 
 =============================================
@@ -215,6 +235,7 @@ into TensorBoard 392 Updating our metrics logging 396
 Saving our model 397
 #. Results 399
 
+
 Chapter 14 : End-to-end nodule analysis and where to go next 
 =============================================
 1. Towards the finish line 405
@@ -232,6 +253,7 @@ weights: Fine-tuning 422 More output in TensorBoard 428
 Training, validation, and test sets 433
 #. What next? Additional sources of inspiration (and data) Preventing overfitting: Better regularization 434 Refined training
 data 437 Competition results and research papers 438
+
 
 Chapter 15 : Deploying to production 
 =============================================
