@@ -1,28 +1,118 @@
 Chapter 1 : Introducing deep learning and the Pytorch Library
 =============================================
-1. The deep learning revolution
+1. Intro
+    a) 'Artificial intelligence'
+        #. Not 'thinking' in the human sense of the word
+        #. Is a general class of algorithms that are able to approximate complicated,
+           non-linear processe
+#. 1.1 - Deep learning revolution
     a) Deep learning is a general class of algorithms that are able to approximate
        complicated, nonlinear processes very, very effectively,
-    #) Advantages (see \ref{fig1.1}
+    #) Most ML relied heavily on feature engineering.
+        #. Transform the data to facilitate downstream algorithm
+        #. Consider digit recognition ex
+            * Maybe make a set of filters to estimate edge count and direction and 
+              then predict digit.
+            * Maybe consider holes, loops, etc
+        #. Maybe adjust filters as training proceeds
+    #) Deep Learning (DL) finds representations automatically from raw data
+        #. Often better than the handcrafted data
+        #. Requirements
+            * Way to ingest data we have at hand
+            * Define the DL machine
+            * Automated way (i.e. training) to obtain useful representations and
+              make machine produce desired outputs
+    #) Fig 1.1 : (see \ref{fig1.1})
+        #. Illustrates feature engineering vs. DL and its advantages
         #. Traditionally
             * data scientist hand-crafted engineered features
         #. Deep learning
             * feed in the raw data and it extracts hierarchical features automatically
         #. ![Fig 1.1 - handcrafted features vs increased data reqs\label{fig1.1}](figs/fig_1.1.png)
-#. PyTorch for deep learning 
-#. Why PyTorch? 
-    a) The deep learning competitive landscape
-#. An overview of how PyTorch supports deep learning
-    a) projects 
-    #) ![Fig 1.1 - handcrafted features vs increased data reqs\label{fig1.1}](figs/fig_1.1.png)
-#. Hardware and software requirements
-    a) Using Jupyter Notebooks
-#. Exercises
-#. Summary
+#. 1.2 - Pytorch for deep learning
+#. 1.3 - Why PyTorch?
+    a) Pythonic, ubiquitous, allows GPU use
+    #) Flexible, allows complex implementation of ideas w/o unneccessary complexity
+       from the library.
+#. 1.3.1 - The Deep Learning Competitive landscape
+    a) Before pytorch's first release
+        #. Theono / TensorFlow (TF) were the premiere low-level libs with user
+           defined computational graph
+        #. Lasagne / Keras were high-level wrappers around Theono, TF and CNTK as well
+        #. Caffe, CHainer, DyNet, Torch all had their own niches
+    #) W/in 2 years, the community consolidated behind PyTorch or TF
+        #. Theono ceased active dev
+        #. TF
+            * consumed Keras
+            * Added Pytorch-like "eager mode"
+        #. JAX, by google, became the Numpy-like equivalent for FPUs
+        #. Pytorch
+            * Consumed Caffe2 for backend
+            * Replaced most low-level code reused from Lua-based Torch project
+            * Added support for ONNX, vendor-neutral model description and exchange
+              format
+            * Added delayed-execution 'graph mode' runtime called TorchScript
+            * Replaced CNTK and Chainer as framework of choice for respective
+              corporate sponsors
+    #) TF is more industry-wide community, PyTorch used by academia / teaching
+#. 1.4 - Overview of how PyTorch supports deep learning projects
+    a) 2 Core features
+        #. Provides Tensor data structure
+        #. Provides ability of tracking operations done on Tensors and track their 
+           derivatives
+            * 'autograd' engine under the hoold
+    #) torch.nn
+        #. Core of pytorch, provides
+            * NN layers, fully connected layers, convolutional layers,
+              activation functions and loss functions
+        #. Still Needs -
+            * training 
+            * optimizer
+    #) ![Fig 1.2\label{fig1.2}](figs/fig_1.2.png) : Basic, high-level structure of a pytorch project...
+        #. From left to right...
+        #. Dataset (torch.utils.data)
+            * Bridge from Data Source -> Tensor
+            * Can parallelize and assemble data into batches
+        #. Training model
+            * Inputs untrained model and batch tensors
+            * Outputs trained model
+            * Evaluates based off of loss function (provided in torch.nn)
+            * optimizer (torch.optim) to change model weights after calculating
+              loss function
+            * Can use torch.nn.parallel.DistributedDataParallel and torch.distributed
+        #. Trained model deployed in production
+#. 1.5 - Hardware and software requirements
+    a) MacOS binaries don't include anything CUDA enabled b/c macs don't have CUDA
+       enabled GPUs
 
 
 Chapter 2 : Pre-trained Methods
 =============================================
+1. Intro
+#. 2.1 A pretrained network that recognizes the subject of an image
+    a) Working with ImageNet and Wordnet
+        #. http://imagenet.stanford.edu
+        #. http://wordnet.princeton.edu
+    #) ImageNet Large Scale Visual Recognition Challeng
+        #. Competition started in 2010
+        #. 1.2million images
+    #) Each file is an RGB image w/ h x w and 3 color channels
+    #) Output is a 1000 element tensor corresponding with the 1000 possible class 
+       values
+        #. See ![Fig 2.2 : The inference process \label{fig2.2}](figs/fig_2.2.png) 
+#. 2.1.1 Obtaining a pretrained network for image recognition
+    a) Download model
+        #. [TOrch Vision](https://github.com/pytorch/vision)
+        #. [AlexNet](http://mng.bz/lo6z)
+        #. [ResNet](https://arxiv.org/pdf/1512.03385.pdf)
+        #. [Inception 3](https://arxiv.org/pdf/1512.00567.pdf)
+    #) AlexNet
+        #. Won ILSVRC in 2012 w/ an error rate of 15.4%, 2nd place was 26.2%
+    #) Fig 2.3 : The AlexNet architecture
+        #. 
+
+
+
 1. A pretrained network that recognizes the subject of an
 image 17
 Obtaining a pretrained network for image recognition 19
