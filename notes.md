@@ -110,6 +110,37 @@ Chapter 2 : Pre-trained Methods
         #. Won ILSVRC in 2012 w/ an error rate of 15.4%, 2nd place was 26.2%
     #) Fig 2.3 : The AlexNet architecture
         #. 
+#. 2.1.2 AlexNet
+    #) Won ILSVRC in 2012 w/ an error rate of 15.4%, 2nd place was 26.2%
+    #) Fig 2.3 : The AlexNet architecture
+        #. ![Fig 2.3 - handcrafted features vs increased data reqs\label{fig2.3}](figs/fig_2.3.png)
+        #. Think of it as a 'filter', takes images in and transforms them to out
+           images
+    #) Initialize
+        ```
+        alexnet = models.AlexNet()
+        # Run forward pass, assuming right type and dim
+        output = alexnet(input)
+        ```
+    #) As is, the weights aren't useful b/c untrained.
+        #. Need to train or load previous trained model
+    #) `models` module
+        #. Uppercase names correspond to classes that implement popular architectures
+        #. Lowercase names are functions to instantiate models w/ predefined numbers
+           of layers and units.
+
+#. 2.1.3 ResNet
+    a) Resnet is a 101 layers convolutional NN.
+    #) Used trick, previously thought you couldn't get good accuracy with that many
+       layers
+    #) Instantiate
+        ```
+        from torchvision import models
+        resnet = models.resnet101(pretrained=True)
+        ```
+    #) 44.5 million params
+
+#. 2.1.3 ResNet
 
 
 
