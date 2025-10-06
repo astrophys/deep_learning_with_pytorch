@@ -140,26 +140,253 @@ Chapter 2 : Pre-trained Methods
         ```
     #) 44.5 million params
 
-#. 2.1.3 ResNet
+#. 2.1.4 Ready, set, almost  run
+    a) Print out resnet
+        ```
+        resnet
+        ```
+    #) Outputs modules, a.k.a. 'layers'
+    #) torchvision comes with preprocessing tools to resize and rescale colors
+        ```
+        from torchvision import transforms
+        preprocess = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+        )])
+        ```
+    #) Test with an image
+        ```
+        from PIL import Image
+        # Can't read Apple's HEIC format
+        # Doesn't handle pngs well (maybe 4 color channels?). Converted from png to jpg and
+        # works
+        img = Image.open("/Users/asnedden/Downloads/two_people_on_tractor.png")
+        img.show() # illustrates image
+        # preprocess from function above
+        img_t = preprocess(img)     # returns tensor
+        
+        # RUN!
+        import torch
+        batch_t = torch.unsqueeze(img_t, 0)
+        
+        # necessary initialization step 
+        resnet.eval()
+        
+        batch_t = torch.unsqueeze(img_t, 0)
+        out = resnet(batch_t)
+        ```
+#. 2.1.5 Run!
+    a) Find best match
+        ```
+        out.shape # this is 1col x 1000rows
+        # Extract labels, downloaded from github
+        with open('data/p1ch2/imagenet_classes.txt') as f:
+           labels = [line.strip() for line in f.readlines()]
+        # Get the label with max value from out
+        _, index = torch.max(out, 1)
+        percentage = torch.nn.functional.softmax(out, dim=1)[0] * 100
+        labels[index]   # 'tractor'
+        labels[index[0]], percentage[index[0]].item()
+        # WIN
+        ```
+    #) Get the next best matches
+        ```
+        _, indices = torch.sort(out, descending=True)
+        [(labels[idx], percentage[idx].item()) for idx in indices[0][:5]]
+        # Returns all farm related equipment
+#. 2.2 - A pretrained model that fakes it until it makes 
+    a) Say we want to pass art forgeries
+        #. We don't know how to paint
+        #. Need feedback from artists, but how to if we took to to an auction house
+           we'd get kicked out w/o any feedback
+        #. Enter GAN game
+#. 2.2.1 - The GAN game
+    a) E.g. one NN is the 'fake painter' otehr is the 'art historian'
+    #) Jargon
+        #. GAN = Generative Adversarial Network
+            * Generative  = something is being created, i.e. fake masterpieces
+            * Adversarial = two networks competing to outsmart each other
+            * Network     = duh
+        #. generator = AI painter
+        #. discriminator = amoral art inspector
+    #) ![Fig 2.5 - Concept of a GAN game \label{fig2.5}](figs/fig_2.5.png)
+        #. It is an iterative process where the discriminator's feedback is used
+           to adjust the generator's generated images
+        #. Note who 'wins' isn't relevant, it is just how they are training 
+        #. Not often used, but can generate amazing results, when it works.
+#. 2.2.2 - CycleGAN
+    a) Process of turning images from one domain to another 
+    #) ![Fig 2.6 - \label{fig2.6}](figs/fig_2.6.png)
+        #. Two generators, two discriminators
+    #) QUESTION : I don't fully understand how this works
+#. 2.2.3 - A network that turns horses into zebras
+    a) CycleGAN trained on horse and zebra images extracted from ImageNet dataset
+    #) Try yourself
+        ```
+        from three_cyclegan import ResNetGenerator
+        model_path = 'data/p1ch2/horse2zebra_0.4.0.pth'
+        model_data = torch.load(model_path)
+        netG.load_state_dict(model_data)
+        netG = ResNetGenerator()
+        # Put it evaluation mode
+        netG.eval()     # Takes horse image, turns into zebra
+        # This takes 
+        from PIL import Image
+        from torchvision import transforms
+        # This makes sure the input to netG is correct format
+        preprocess = transforms.Compose([transforms.Resize(256),
+                                        transforms.ToTensor()])
+        img = Image.open("/Users/asnedden/Downloads/two_people_on_tractor.jpg")
+        img_t = preprocess(img)
+        batch_t = torch.unsqueeze(img_t, 0)
 
+        # Evaluate
+        batch_out = netG(batch_t)
 
+        # Convert back to image
+        out_t = (batch_out.data.squeeze() + 1.0) / 2.0
+        out_img = transforms.ToPILImage()(out_t)
+        # out_img.save('../data/p1ch2/zebra.jpg')
+        out_img
+        ```
+#. 2.3 - A pretrained network that describes scenes
+    a) ![Fig 2.9 - \label{fig2.6}](figs/fig_2.6.png)
+        #. Captioning model.  Trained on model of captioned images
+        #. First half finds descriptive words
+        #. Second half uses recurrent method w/ multiple forward passes to make an
+           intelligeable sentence.
+#. 2.3.1 - NeuralTalk
+    a) It could describe the created image of the rider on the zebra (from 2.2.3)
+       with spurious zebra stripes
+        #. It would label as 
+#. 2.4 - Torch Hub
+    a) Can publish model on Github w/ or w/o pretrained weights and exposed through
+       interface PyTorch understands
+        #. Need `hubconf.py` : 
+            ```   
+            dependencies = ['torch', 'math']
+            def some_entry_fn(*args, **kwargs):
+                model = build_some_model(*args, **kwargs)
+                return model
 
-1. A pretrained network that recognizes the subject of an
-image 17
-Obtaining a pretrained network for image recognition 19
-AlexNet 20 ResNet 22 Ready, set, almost run 22
-Run! 25
-#. A pretrained model that fakes it until it makes it 27
-The GAN game 28 CycleGAN 29 A network that turns
-horses into zebras 30
-#. A pretrained network that describes scenes 33
-#. Torch Hub
+            def another_entry_fn(*args, **kwargs):
+                model = build_another_model(*args, **kwargs)
+                return model
+            ```   
+#. 2.5 - Conclusion
+    a) It was fun!
 
 
 Chapter 3 : It starts with a tensor
 =============================================
-1. The world as floating-point numbers 40
-#. Tensors: Multidimensional arrays 42
+#. 3.1 - The world as floating-point numbers
+    a) Must encode real-world data into floats
+        #. ![Fig 3.1 : Deep neural network learns how to transform intpu into an output representation\label{fig3.1}](figs/fig_3.1.png) 
+    #) Need solid understanding of how pytorch handles and stores data
+    #) Tensor
+        #. Not the traditional mathematical form of 'tensor' with notion of spaces
+           reference systems and transformations.
+            * Do not apply here
+        #. Just an 'N' dimensional vector
+    #) ![Fig 3.2 : Tensors are the building blocks for representing data in PyTorch\label{fig3.2}](figs/fig_3.2.png) 
+    #) Numpy is a competitor to pytorch in the multi-dimensional vector business
+#. 3.2 - Tensors: Multidimensional arrays
+#. 3.2.2 - Constructing our first tensors
+    ```
+    import torch
+    tensor([1., 1., 1., 1.])
+    ```
+#. 3.2.3 - The essence of tensors
+    a) ![Fig 3.3 : Python object vs. tensor\label{fig3.2}](figs/fig_3.2.png) 
+        #. Python list, scattered in RAM
+        #. Tensor / Array = contiguous memory
+    #) Can convert Python list to a tensor, a la
+        ```
+        points = torch.tensor([4.0, 1.0, 5.0, 3.0, 2.0, 1.0])
+        points.shape
+        ```
+#. 3.3 - Indexing tensors
+    a) Similar syntax as numpy
+#. 3.4 - Named tensors
+    #) Basically like pandas column names, illustrated by the incredible 
+       diverstiy displayed by how BW images are handled, e.g.
+        ```
+        img_t = torch.randn(3, 5, 5) # shape [channels, rows, columns]
+        weights = torch.tensor([0.2126, 0.7152, 0.0722])
+        # Now name
+        weights_named = torch.tensor([0.2126, 0.7152, 0.0722], names=['channels'])
+        img_named = img_t.refine_names(..., 'channels', 'rows', 'columns')
+
+        >>> img_named.shape, img_named.names
+        (torch.Size([3, 5, 5]), ('channels', 'rows', 'columns'))
+        >>> weights_named.shape, weights_named.names
+        (torch.Size([3]), ('channels',))
+
+        # weights_named and img_named are mis-aligned, lets fix it via :
+        >>> weights_aligned = weights_named.align_as(img_named)
+        >>> weights_aligned
+        tensor([[[0.2126]],
+        
+                [[0.7152]],
+        
+                [[0.0722]]], names=('channels', 'rows', 'columns'))
+        >>> weights_aligned.shape
+        torch.Size([3, 1, 1])
+        ```
+    #) Pytorch uses [Einstein notation](https://rockt.ai/2018/04/30/einsum)
+        #. Reading that page
+            * QUESTION : Why does first eqn use $c_{j}$ instead of $\textbf{C_{ij}}$? 
+        #. Follows typical index-contraction we remember from physics
+        #. Implemented via : 
+            ```
+            numpy.einsum(equation, operands)
+            torch.einsum(equation, operands)
+            tf.einsum(equation, operands)
+            ```
+        #. Example : First equation 
+            * Latex version 
+                $$
+                c_{j} \sum_{i} \sum_{k} A_{ik} B_{kj}
+                $$
+            * torch version
+                ```
+                c_j = torch.einsum("ik,kj->j", [A, B])
+                ```
+        #. Tangible example of taking a transpose
+            ```
+            >>> A = torch.randn(2,3)
+            >>> A
+            tensor([[-0.8336, -1.3203, -0.5381],
+                    [ 0.1549, -0.6943, -0.7840]])
+            >>> torch.einsum("ij->ji", A)
+            tensor([[-0.8336,  0.1549],
+                    [-1.3203, -0.6943],
+                    [-0.5381, -0.7840]])
+            ```
+        #. Tangible example of index contraction
+            ```
+            >>> A = torch.tensor([[1,2],[3,4]])
+            >>> A
+            tensor([[1, 2],
+                    [3, 4]])
+            >>> B = torch.tensor([[1,2],[3,4],[5,6]])
+            >>> B
+            tensor([[1, 2],
+                    [3, 4],
+                    [5, 6]])
+            >>> torch.einsum("ij,kj->ik",[A,B])
+            tensor([[ 5, 11, 17],
+                    [11, 25, 39]])
+            ```
+    #) Pytorch uses [Einstein notation](https://rockt.ai/2018/04/30/einsum)
+            
+
+
+
 From Python lists to PyTorch tensors tensors 43 The essence of tensors 43
 #. Indexing tensors 46
 #. Named tensors 46
