@@ -383,35 +383,153 @@ Chapter 3 : It starts with a tensor
                     [11, 25, 39]])
             ```
     #) Pytorch uses [Einstein notation](https://rockt.ai/2018/04/30/einsum)
-            
-
-
-
-From Python lists to PyTorch tensors tensors 43 The essence of tensors 43
-#. Indexing tensors 46
-#. Named tensors 46
-42 Constructing our first
-#. Tensor element types 50
-Specifying the numeric type with dtype 50 A dtype for every
-occasion 51 Managing a tensor’s dtype attribute 51
-#. The tensor API 52
-#. Tensors: Scenic views of storage 53
-Indexing into storage 54 Modifying stored values: In-place
-operations 55
-#. Tensor metadata: Size, offset, and stride 55
-Views of another tensor’s storage 56 Transposing without
-copying 58 Transposing in higher dimensions 60
-Contiguous tensors 60
-#. Moving tensors to the GPU 62
-Managing a tensor’s device attribute 63
-#. NumPy interoperability 64
-#. Generalized tensors are tensors, too 65
-#. Serializing tensors 66
-Serializing to HDF5 with h5py 67
+    #) Given that this is experimental, why are you wasting my time?
+#. 3.5 - Tensor element types
+    a) What to store in Tensor?
+        #. Numeric types are objects, fine for small things, bad in bulk.
+        #. List in python are meant for sequential collections of objects. Bad
+           in terms of memory organization
+        #. Python interpreter is slow compared to compiled code
+        #. Tensor must have the same type and are low level C value types.
+#. 3.5.1 - Specifying the numeric type with dtype
+    a) Similar to numpy
+#. 3.5.2 - A dtype for every occasion
+#. 3.5.3 - Managing a tensor's dtype attribute
+    a) Get `dtype` via `tensor.dtype`
+    #) Can cast to new dtype a la `tensor.to(dtype=torch.double)`
+#. 3.6 - Tensor API
+    a) Offers operations similar to numpy, no surprise
+#. 3.7 - Tensors : Scenic views of storage
+    a) Low level object is torch.Storage
+        #. 1D object
+#. 3.7.1 - Indexing into storage
+#. 3.7.2 - Modifying store values : In-place operations
+    a) Why are they bothering us with all this low-level detail?
+    #) Trailing underscore means that operation is done in place
+        ```
+        a = torch.ones(3, 2)
+        a.zero)+_()
+        ```
+#. 3.8 - Tensor metadata : Size, offset, and stride
+    a) Basically, this is the info you'd need to store multidimensional matrices
+       in memory
+        #. size = number of elements
+        #. stride = how to skip to next 'row' in matrix.
+        #. offset = i.e. index to beginning of data (almost like a pointer)
+        #. See : ![Fig 3.5 : Relationship between tensor metadata\label{fig3.5}](figs/fig_3.5.png) 
+#. 3.8.1 - Views of another tensor’s storage
+    a) Taking transpose is just changing stride and such, no reallocation of mem
+#. 3.8.2 - 
+    #) See : ![Fig 3.6 : Relationship between tensor metadata\label{fig3.6}](figs/fig_3.6.png) 
+#. 3.8.3 - Transposing in higher dimensions
+#. 3.8.4 - Contiguous tensors
+        ```
+        >>> points = torch.tensor([[4.0, 1.0], [5.0, 3.0], [2.0, 1.0]])
+        >>> points_t = points.t()
+        >>> points_t
+        tensor([[4., 5., 2.],
+                [1., 3., 1.]])
+        >>> points_t.storage()
+        4.0
+        1.0
+        5.0
+        3.0
+        2.0
+        1.0
+        >>> points_t.stride()
+        (1, 2)
+        >>> points_t_cont = points_t.contiguous()
+        >>> points_t_cont
+        tensor([[4., 5., 2.],
+                [1., 3., 1.]])
+        >>> points_t_cont.stride()
+        (3, 1)
+        >>> points_t_cont.storage()
+        # Out[46]:
+        4.0
+        5.0
+        2.0
+        1.0
+        3.0
+        1.0
+        [torch.FloatStorage of size 6]
+        ```
+    #) Notice that the memory has been shuffled
+    #) See : ![Fig 3.7 : Relationship between tensor's offset, size and stride\label{fig3.7}](figs/fig_3.7.png) 
+#. 3.9 - Moving tensors to the GPU
+    a) e.g. 
+        ```
+        # 
+        points_gpu = points.to(device='cuda')
+        # Specify a specific GPU
+        points_gpu = points.to(device='cuda:0')
+        # Have to move data back to cpu
+        points_cpu = points_gpu.to(device='cpu')
+        ```
+#. 3.10 - Numpy interoperability
+    a) e.g.
+        ```
+        points = torch.from_numpy(points_np)
+        ```
+    #) Note pytorch prefers 32bit floating point numbers, while numpy is 64bit.
+        #. Handle accordingly
+    #) pytorch and numpy have same underlying data structure, so conversion costs
+       nothing
+#. 3.11 - Generalized tensors are tensors, too
+    a) Basically, if someone has a data structure that meets the torch tensor API
+       it is a 'tensor'
+        #. Many implementations
+#. 3.12 - Serializing tensors
+    a) Uses 'pickle' under the hood
+    #) e.g.
+        ```
+        # Saving
+        torch.save(points, 'somefile.t')
+        # Loading
+        points - torch.load('somefile.t')
+        ```
+#. 3.12.1 - Serializing to HDF5 with h5py
 
 
 Chapter 4 : Real-world data representation using tensors
 =============================================
+1. 4.0
+    a) Q : How do we represent a piece of data into a tensor?
+    #) A : We'll learn here. Some manipulation will be required
+
+#. 4.1 - Working with images
+    a) Image is a collection of scalars arranged in a regular grid.
+        #. Can be RGB, grey scale or other
+        #. Consumer is 8bit, medical images are 12 or 16bit
+
+#. 4.1.1 - Adding Color channels
+
+#. 4.1.2 - Loading an image file
+    a) Use imageio lib, could use torchvision instead
+        ```
+        >>> import imageio
+        # imageio.imread is deprecated
+        >>> img_arr = imageio.v3.imread("/Users/asnedden/Downloads/two_people_on_tractor.png")
+        >>> img_arr.shape
+        (2076, 1556, 4)
+        ```
+
+#. 4.1.3 - Changing the layout
+        ```
+        >>> import torch
+        >>> img = torch.from_numpy(img_arr)
+        >>> img.shape
+        torch.Size([2076, 1556, 4])
+        >>> out = img.permute(2, 0, 1)
+        # No copy created, just refs same underlying data
+        >>> out.shape
+        torch.Size([4, 2076, 1556])
+        ```
+        
+
+
+
+
 1. Working with images 71
 Adding color channels 72 Loading an image file 72
 Changing the layout 73 Normalizing the data 74
