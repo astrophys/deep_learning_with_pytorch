@@ -515,6 +515,7 @@ Chapter 4 : Real-world data representation using tensors
         ```
 
 #. 4.1.3 - Changing the layout
+    a) Reshaping tensor via permute
         ```
         >>> import torch
         >>> img = torch.from_numpy(img_arr)
@@ -525,10 +526,122 @@ Chapter 4 : Real-world data representation using tensors
         >>> out.shape
         torch.Size([4, 2076, 1556])
         ```
+
+    #) Load multiple images into tensor
+        ```
+        batch_size = 3
+        # N x C x H x W
+        #   --> N = number of images
+        #   --> C = colors
+        batch = torch.zeros(batch_size, 3, 256, 256, dtype=torch.uint8)
+        ```
+
+    #) Try w/ real data
+        ```
+        import os; import torch; import imageio
+
+        data_dir = 'data/p1ch4/image-cats'
+        filenames = [name for name in os.listdir(data_dir) if os.path.splitext(name)[-1] == '.png']
+
+        for i, filename in enumerate(filenames):
+            img_arr = imageio.imread(os.path.join(data_dir, filename))
+            img_t = torch.from_numpy(img_arr)
+            img_t = img_t.permute(2, 0, 1)
+            # Keep only 3 channels. Sometimes images have a 'transparency' channel
+            img_t = img_t[:3]
+            batch[i] = img_t
+        ```
         
+#. 4.1.4 - Normalizing the data
+    a) NN work better when data values range from [0,1] or [-1,1]
+    #) Could just divide by 255
+        ```
+        batch = batch.float()
+        batch /= 255.0
+        ```
+    #) Normalize, center and make unit std
+        ```
+        n_channels = batch.shape[1]
+        for c in range(n_channels):
+            mean = torch.mean(batch[:, c])
+            std = torch.std(batch[:, c])
+            batch[:, c] = (batch[:, c] - mean) / std
+        ```
+    #) QUESTION : should the std and mean be over the whole data set or over
+                  specific images?
 
+#. 4.2 - 3D images: Volumetric Data
+    a) CT Images
+        #. Gray scale, so color dimension is ignored
+        #. 5D tensor : N x C x D x H x W
+            * N - number of images
+            * C - color, 1, grayscale
+            * D - depth, i.e. z
+            * H - height
+            * W - width
 
+#. 4.2.1 - Loading a specialized format
+    a) Example of 5D data
+        ```
+        import torch
+        import imageio
+        
+        data_dir = 'data/p1ch4/volumetric-dicom/2-LUNG 3.0  B70f-04083'
+        vol_arr = imageio.volread(data_dir, 'DICOM')
+        vol_arr.shape
+        
+        vol = torch.from_numpy(vol_arr).float()
+        # Add extra dimension so torch expects it
+        vol = torch.unsqueeze(vol, 0)
+        ```
 
+#. 4.3 - Representing tabular data
+    a) Simplest data is either table or csv, without any inherent ordering (i.e. not
+       time series
+
+#. 4.3.1 - Using a real-world dataset
+    a) See : public available data sets :
+        #. https://github.com/caesar0301/awesome-public-datasets.
+    #) Wine Quality 
+        #. data/4.1.3_wine_quality.csv
+        #. Downloaded from https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv
+        #. Variables
+            * fixed acidity
+            * volatile acidity
+            * citric acid
+            * residual sugar
+            * chlorides
+            * free sulfur dioxide
+            * total sulfur dioxide
+            * density
+            * pH
+            * sulphates
+            * alcohol
+            * quality
+#. 4.3.2 - Using a real-world dataset
+    ```
+    # Convert to torch tensor
+    df = pd.read_csv('data/4.1.3_wine_quality.csv', sep=';')
+    wineq = torch.from_numpy(df.values)
+    print(wineq.shape, wineq.dtype)
+    ```
+    a) Continuous, ordinal and categorical variables
+        #. continuous = floats, just as you'd expect
+        #. ordinal = integers, relative sizes matter (e.g. small, medium, large)
+        #. categorical = integers, no relative size implied
+    
+#. 4.3.3 - Representing scores
+    a) For wine data, keep score as continuous variable. Keep it as a real number
+    #) Hold back the 'score' variable since that is what we'll be predicting
+    ```
+    data=wineq[:,:-1]
+    data, data.shape
+
+    target = wineq[:, -1]
+    target, target.shape
+    ```
+    
+#. 4.3.4 - One-hot encoding
 
 1. Working with images 71
 Adding color channels 72 Loading an image file 72
