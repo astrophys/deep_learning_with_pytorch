@@ -620,6 +620,8 @@ Chapter 4 : Real-world data representation using tensors
             * quality
 #. 4.3.2 - Using a real-world dataset
     ```
+    import torch
+    import pandas as pd
     # Convert to torch tensor
     df = pd.read_csv('data/4.1.3_wine_quality.csv', sep=';')
     wineq = torch.from_numpy(df.values)
@@ -634,14 +636,72 @@ Chapter 4 : Real-world data representation using tensors
     a) For wine data, keep score as continuous variable. Keep it as a real number
     #) Hold back the 'score' variable since that is what we'll be predicting
     ```
+    # Drop quality, b/c that is our dependent variable we want to predict
     data=wineq[:,:-1]
     data, data.shape
 
-    target = wineq[:, -1]
+    # Grab dependent variable we want to predict
+    target = wineq[:, -1].long()        # 64bit int needed later by scatter()
     target, target.shape
     ```
     
 #. 4.3.4 - One-hot encoding
+    a) Appropriate for purely categorical variables
+        #. For 10 categories, the vector might look like :
+            ```
+            v = (1,0,0,...,0)
+            ```
+        #. Only one value is non-zero.
+        #. No implied distance or ordering
+    #) Use scatter_() to create one-hot encoding
+        ```
+        target.max()        # tensor(9)
+        target.min()        # tensor(3)
+
+        # 10 possible values for dependent variable we want to predict
+        target_onehot = torch.zeros(target.shape[0], 10)
+        
+        # Modified in place
+        # Positionally populate with '1' for each int value in target
+        #   --> Really wants 64bit ints
+        #   --> Just maps int, to INDEX in array, so '6' get mapped to index 6
+        target_onehot.scatter_(1, target.unsqueeze(1), 1.0)
+        ```
+    #) Note '_' in scatter_() denotes modifying in place
+    #) Note that the first 4 columns (0 indexed) will not
+    #) unsqueeze adds 'extra' dummy dimension b/c target_onehot has two dims
+
+
+#. 4.3.5 - When to categorize
+    a) ![Fig 4.4 - how to treat columns with continuous, ordinal and categorical data\label{fig4.4}](figs/fig_4.4.png)
+        #. Gives relevant logic.
+    #) Find mean and stdev
+        ```
+        # Mean over 11 chemical categories
+        >> data_mean = torch.mean(data, dim=0)
+        >> data_mean 
+        tensor([23.3296, 15.3521, 14.3205,  ..., 14.8194, 14.0655, 13.0709], 
+               dtype=torch.float64)
+
+        >>> data_var = torch.var(data, dim=0)
+        >>> data_var
+        tensor([7.1211e-01, 1.0160e-02, 1.4646e-02, 2.5726e+01, 4.7733e-04, 2.8924e+02,
+                1.8061e+03, 8.9455e-06, 2.2801e-02, 1.3025e-02, 1.5144e+00],
+               dtype=torch.float64)
+        ```
+    #) Normalize data 
+        #. Center by subtracting mean
+        #. Normalize by dividing by stdev
+        ```
+        # 1/sqrt(N) is (non-intuitively) accomadated by torch.var()
+        data_normalized = (data - data_mean) / torch.sqrt(data_var)
+        ```
+        #. QUESTION : How does it know to do it along the correct dimension?
+#. 4.3.6 - Finding thresholds
+    a) 
+        ```
+        ```
+
 
 1. Working with images 71
 Adding color channels 72 Loading an image file 72
