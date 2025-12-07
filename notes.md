@@ -698,25 +698,75 @@ Chapter 4 : Real-world data representation using tensors
         ```
         #. QUESTION : How does it know to do it along the correct dimension?
 #. 4.3.6 - Finding thresholds
+    a) Look at really bad wines...recall target is 'rating'
+        ```
+        bad_indexes = target <= 3       # no wines are lower than 3..
+        bad_indexes.shape, bad_indexes.dtype, bad_indexes.sum()
+        # Can slice a la pandas
+        bad_data = data[bad_indexes]
+        bad_data.shape
+        ```
+    #) Look at mean of features for bad, mid and good wines
+        ```
+        mid_data = data[(target > 3) & (target < 7)]    # I don't think pandas can do that
+        good_data = data[target >= 7]
+
+        # Get means
+        bad_mean = torch.mean(bad_data, dim=0)
+        mid_mean = torch.mean(mid_data, dim=0)
+        good_mean = torch.mean(good_data, dim=0)
+
+        # Look at df.columns, see obvious pattern in 'chlorides', 'free_sulfur_dioxide'
+        # adn 'total_sulfur_dioxide' both decrease as bad -> good
+        for i, args in enumerate(zip(df.columns, bad_mean, mid_mean, good_mean)):
+                print('{:2} {:20} {:6.2f} {:6.2f} {:6.2f}'.format(i, *args))
+
+         0 fixed_acidity          7.60   6.89   6.73
+         1 volatile_acidity       0.33   0.28   0.27
+         2 citric_acid            0.34   0.34   0.33
+         3 residual_sugar         6.39   6.71   5.26
+         4 chlorides              0.05   0.05   0.04
+         5 free_sulfur_dioxide   53.33  35.42  34.55
+         6 total_sulfur_dioxide 170.60 141.83 125.25
+         7 density                0.99   0.99   0.99
+         8 pH                     3.19   3.18   3.22
+         9 sulphates              0.47   0.49   0.50
+        10 alcohol               10.35  10.26  11.42
+        ```
+    #) Let's threshold on totla_sulfur_threshold
+        ```
+        total_sulfur_threshold = 141.83
+        # slice
+        total_sulfur_data = data[:,6]
+        predicted_indexes = torch.lt(total_sulfur_data, total_sulfur_threshold)
+        # boolean tensor, type, number of wines above threshold
+        # --> 2727 total wines
+        predicted_indexes.shape, predicted_indexes.dtype, predicted_indexes.sum()
+
+        # Instead of cutting on total_sulfur, cut on target
+        # --> 3258 total wines
+        actual_indexes = target > 5
+        actual_indexes.shape, actual_indexes.dtype, actual_indexes.sum()
+        ```
+    #) More (3258) actually good wines (i.e. target > 5) than our threshold predicts
+       (2727)
+    #) Look at intersection
+        ```
+        # item() gets the value rather than a tensor
+        n_matches = torch.sum(actual_indexes & predicted_indexes).item()    # = 2018
+        n_predicted = torch.sum(predicted_indexes).item()                   # = 2727
+        n_actual = torch.sum(actual_indexes).item()                         # = 3258
+
+        # Fraction of predicted matches are correct
+        print(n_matches, n_matches / n_predicted)
+
+        # Fraction of good wines properly identified
+        print(n_matches, n_matches / n_actual)
+        ```
+#. 4.4 - Working with time series
     a) 
-        ```
-        ```
 
 
-1. Working with images 71
-Adding color channels 72 Loading an image file 72
-Changing the layout 73 Normalizing the data 74
-#. 3D images: Volumetric data 75
-Loading a specialized format 76
-#. Representing tabular data 77
-Using a real-world dataset 77 Loading a wine data tensor 78
-Representing scores 81 One-hot encoding 81 When to
-categorize 83 Finding thresholds 84
-#. Working with time series 87
-Adding a time dimension 88 Shaping the data by time
-period 89 Ready for training 90
-#. Representing text 93
-Converting text to numbers 94 One-hot-encoding characters 94
 
 
 Chapter 5 : The mechanics of learning
