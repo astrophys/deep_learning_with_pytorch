@@ -764,8 +764,119 @@ Chapter 4 : Real-world data representation using tensors
         print(n_matches, n_matches / n_actual)
         ```
 #. 4.4 - Working with time series
-    a) 
+    a) Get Bike Time sharing series
+        #. https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset
+    #) ![Fig 4.5 - Transforming a 1D, multichannel dataset into a 2D, multichannel dataset by separating the date and hour of each sample into separate axes\label{fig4.4}](figs/fig_4.4.png)
+        #. Goal is to convert flat 2D and transform it to 3D
+        #. 3rd dimension is time..
+#. 4.4.1 - Adding a time dimension
+    a) Load the data, let's use pandas instead of np.loadtxt()...
+        ```
+        import pandas as pd
+        import torch
 
+        # Convert column dteday to day of the month..
+        df = pd.read_csv("data/p1ch4/bike-sharing-dataset/hour-fixed.csv", converters={1: lambda x: float(x[8:10])})
+
+        bikes = torch.from_numpy(df.values)
+        ```
+    #) Jargon
+        #. 'N' = parallel sequences of size 'C'
+        #. 'C' = 'channel'
+#. 4.4.2 - Shaping the data by time period
+    a) Data dimeension : 
+        #. $N \times C \times L$ where
+            * $N$ = number of samples
+            * $C$ = number of channels (i.e. columns / variables)
+            * $L$ = length, in this case 24 (h)
+        ```
+        print(bikes.shape, bikes.stride())
+        # Reshapes Tensor - 
+        #   --> last two args, say the shape we want the other two to be
+        #   --> The '-1' means to calculate the last thing based off args[1,2]
+        daily_bikes = bikes.view(-1, 24, bikes.shape[1])
+        print(daily_bikes.shape, daily_bikes.stride())
+        # (torch.Size([730, 24, 17]), (24, 1, 17520))
+
+        daily_bikes = daily_bikes.transpose(1, 2)
+        print(daily_bikes.shape,daily_bikes.stride())
+        # (torch.Size([730, 17, 24]), (24, 17520, 1))
+        ```
+        #. QUESTION : I think his bikes.stride() is WRONG?  Since it is related to
+                      storage in memory, there is a chance that it is platform 
+                      dependent
+#. 4.4.3 - Ready for training
+    a) Let's do the one-hot encoding method
+        ```
+        first_day = bikes[:24,:].long()
+        weather_onehot = torch.zeros(first_day.shape[0], 4)
+
+        # 9th column is orginal weather data
+        first_day[:,9]
+    
+        # Now use one-hot encoding, recall this is really ordinal data.., one hot
+        # encoding is best used for categorical data
+
+        # -1 b/c onehot coding is 0 indexed..
+        # --> modifies in place
+        weather_onehot.scatter_(dim=1,
+                                index=first_day[:,9].unsqueeze(1).long() -1,
+                                value=1.0)
+
+        # Append / cat onehot as columns to bikes
+        torch.cat((bikes[:24], weather_onehot), 1).shape
+
+        # Can do same w/ reshaped daily_bikes, recall shape = [730, 17, 24]
+        # --> Note here that we are making it the same dimension as the number
+        #     of days which is different from above where we only handled one day
+        daily_weather_onehot = torch.zeros(daily_bikes.shape[0], 4, 
+                                           daily_bikes.shape[2])
+        daily_weather_onehot.shape
+        # torch.Size([730, 4, 24])
+
+        # Now expand one-hot encoding
+        daily_weather_onehot.scatter_(1, daily_bikes[:,9,:].long().unsqueeze(1) - 1, 1.0)
+
+        # Now concatenate along C dimension, where shape = (B, C, L)
+        daily_bikes = torch.cat((daily_bikes, daily_weather_onehot), dim=1) 
+        daily_bikes.shape
+        # torch.Size([730, 21, 24])
+
+        # Instead of just treating like a categorical variable. 
+        # --> Normalize column 9
+        daily_bikes[:, 9, :] = (daily_bikes[:, 9, :] - 1.0) / 3.0
+        daily_bikes[:,9,:].unique()
+        # tensor([0.0000, 0.3333, 0.6667, 1.0000], dtype=torch.float64)
+
+        # df.columns[10] == temp(erature)
+        temp = daily_bikes[:, 10, :]
+        temp_min = torch.min(temp)
+        temp_max = torch.max(temp)
+        daily_bikes[:, 10, :] = ((daily_bikes[:, 10, :] - temp_min) /
+                                 (temp_max - temp_min))
+        ## Alternatively, get unitary stdev
+        daily_bikes[:, 10, :] = ((daily_bikes[:, 10, :] - torch.mean(temp)) /
+                                  torch.std(temp))
+        ```
+
+#. 4.5 - Representing text
+    a) Recurrent Neural Networks (RNN)
+        #. Successful with text categorization, text generation and automated   
+           translation systems
+    #) Transformers, more flexible to incorporate past information has made a big 
+       splash
+        #. Previously, NLP workloads had sophisticated multistage pipelines that 
+           included rules encoding grammar.
+        #. Now you just use the corpora directly, let rules emerge
+#. 4.5.1 - Converting text to numbers
+    a) Use gutenberg project (www.gutenberg.org) or Wikipedia articles
+    #) Load Jane Austen's Pride and Prejudice from Gutenber website
+        ```
+        with open('../data/p1ch4/jane-austen/1342-0.txt', encoding='utf8') as f:
+            text = f.read()
+        ```
+#. 4.5.2 - One-hot-encoding characters
+    a) 
 
 
 
