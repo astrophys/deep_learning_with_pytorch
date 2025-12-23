@@ -872,11 +872,80 @@ Chapter 4 : Real-world data representation using tensors
     a) Use gutenberg project (www.gutenberg.org) or Wikipedia articles
     #) Load Jane Austen's Pride and Prejudice from Gutenber website
         ```
-        with open('../data/p1ch4/jane-austen/1342-0.txt', encoding='utf8') as f:
+        with open('data/p1ch4/jane-austen/1342-0.txt', encoding='utf8') as f:
             text = f.read()
         ```
 #. 4.5.2 - One-hot-encoding characters
-    a) 
+    a) ASCII = 8 bits for English language
+        #. Unicode = UTF-8, UTF-16, UTF-32
+    #) Limit One-hot encoding to ASCII
+    #) Split text into lines, pick one to look at
+        ```
+        lines = text.split('\n')
+        line=lines[200]
+
+        # One hot encoding 
+        letter_t = torch.zeros(len(line), 128)
+        letter_t.shape
+        # torch.Size([70, 128])
+
+        for i, letter in enumerate(line.lower().strip()):
+            # ord maps letter to ASCII position (?)
+            letter_index = ord(letter) if ord(letter) < 128 else 0
+            letter_t[i][letter_index] = 1
+        ```
+
+#. 4.5.3 - One-hot-encoding characters
+    #) Now let's one-hot encode the words rather then letters
+        ```
+        # Strip punctuation, lowercase
+        def clean_words(input_str):
+            punctuation = '.,;:"!?”“_-'
+            word_list = input_str.lower().replace('\n',' ').split()
+            word_list = [word.strip(punctuation) for word in word_list]
+            return word_list
+
+        words_in_line = clean_words(line)
+        words_in_line
+        # ['impossible', 'mr', 'bennet', 'impossible', 'when', 'i', 'am', 'not', 'acquainted', 'with', 'him']
+
+        # Now find all unique words on corpus
+        word_list = sorted(set(clean_words(text)))
+
+        # Map a word to an index in word_list
+        word2index_dict = {word: i for (i, word) in enumerate(word_list)}
+
+        len(word2index_dict), word2index_dict['impossible']
+        # (7261, 3394)
+
+        word_t = torch.zeros(len(words_in_line), len(word2index_dict))
+        # torch.Size([11, 7261]), 11 words, 7261 options
+
+        for i, word in enumerate(words_in_line):
+            word_index = word2index_dict[word]
+            word_t[i][word_index] = 1
+            print('{:2} {:4} {}'.format(i, word_index, word))
+            #  0 3394 impossible
+            #  1 4305 mr
+            #  2  813 bennet
+            #  3 3394 impossible
+            #  4 7078 when
+            #  5 3315 i
+            #  6  415 am
+            #  7 4436 not
+            #  8  239 acquainted
+            #  9 7148 with
+            # 10 3215 him
+        ```
+    #) Trade off between character vs. word level encoding. 
+        #. Many fewer chars than words, not much meaning but short and concise
+        #. Words have actual meaning, but gets large and bloated
+    #) Compromise is to use `byte pair encoding`, use pairs of latters until reaches
+       prescribed dictionary size
+    #) ![Fig 4.6 - Three ways to encode a word \label{fig4.6}](figs/fig_4.6.png)
+
+#. 4.5.4 - Text embeddings
+    a) One-hot encoding 
 
 
 
