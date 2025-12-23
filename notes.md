@@ -946,23 +946,61 @@ Chapter 4 : Real-world data representation using tensors
 
 #. 4.5.4 - Text embeddings
     a) One-hot encoding 
-
+        #. Works well, but once the number of possibilities is unbounded (e.g.
+           with one book, there are over 7000 items)
+        #. Could dedupe words, condense alternate spellings, collapse past and
+           future tense. Still would be HUGE
+            * Everytime we encounter a new word, would have to add a new column to
+              the vector which would mean adding new weights to the model to
+              account for that new vocabulary entry 
+        #. How can we compress our encoding down to a more manageable size and put
+           a cap on the size growth?
+            * Instead of a sparse matrix with MANY 0's and only 1 per column, 
+              use floating point values.  Use 100 floats to represent all words.
+            * Trick is to find an effective way to map individual words into the
+              space 
+            * THIS is called an EMBEDDING
+        #. Could randomly map to words to numbers in float
+            * This would neglect distance between words based on meaning or context
+        #. Instead, could have a 2D embedding.  One axis is nouns, the other is
+           adjectives
+        #. ![Fig 4.7 - Manual Word Embeddings \label{fig4.7}](figs/fig_4.7.png)
+        #. Can use NN to automate this work, see word2vec for an example
+#. 4.5.5 - Text embeddings as a blueprint
+    a) Embeddings are useful whenever one-hot encodings become burdensome
+#. 4.6 - Conclusion
 
 
 Chapter 5 : The mechanics of learning
 =============================================
-The mechanics of learning 103
-1. A timeless lesson in modeling 104
-#. Learning is just parameter estimation 106
-A hot problem 107 Gathering some data 107 Visualizing
-the data 108 Choosing a linear model as a first try 108
-#. Less loss is what we want 109
-#. Down along the gradient 113
-Decreasing loss 113 Getting analytical 114 Iterating to fit
-the model 116 Normalizing inputs 119 Visualizing
-(again) 122
-#. PyTorch’s autograd: Backpropagating all things 123
-Computing the gradient automatically 123 Optimizers a la
+1. 5.1 - A timeless lesson in modeling
+    a) Took Kepler 6 years to figure out his laws of motion
+        #. Took data from Tycho Brahe's data
+        #. ![Fig 5.1 - Kepler considers multiple candidate models\label{fig5.1}](figs/fig_5.1.png)
+    #) Kepler's laws
+        #. First law : The orbit of every planet is an ellipse with the Sun at one
+                       of the two foci.
+        #. Second law : A line joining a planet and the Sun sweeps out equal areas
+                        during equal intervals of time”
+    #) How did Kepler get the shapes of eccentricity?
+        #. Essentially, Kepler had to try different shapes, using a certain number
+           of observations to find the curve, then use the curve to find some more
+           positions, for times when he had observations available, and then check
+           whether these calculated positions agreed with the observed one
+    #) Over six years, Kepler
+        #. Got good data from Tycho Brahe
+        #. Tried to visualize the data b/c he thought something fishy was going on 
+        #. Chose simplest possible model that had a chance to fit the data (an
+           ellipse)
+        #. Split the data so he could work on part of it and keep an independent set
+           for validation
+        #. Started w/ tentative eccentricity and size for ellipse and iterated
+           until model fit the observations
+        #. validated model on independent observations
+        #. looked back in disbelief
+
+
+
 
 
 Chapter 6 : Using a nerual network to fit the data 
