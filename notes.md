@@ -775,6 +775,16 @@ Chapter 4 : Real-world data representation using tensors
     #) See Fig \label{fig4.5}
     #) See : code/p1ch4/4_time_series_bikes.py
     #) NN will need to see sequences of values for each different quantity
+    a) Load the data, let's use pandas instead of np.loadtxt()...
+        ```
+        import pandas as pd
+        import torch
+
+        # Convert column dteday to day of the month..
+        df = pd.read_csv("data/p1ch4/bike-sharing-dataset/hour-fixed.csv", converters={1: lambda x: float(x[8:10])})
+
+        bikes = torch.from_numpy(df.values)
+        ```
     #) Definitions
         #. N = parallel sequences of size C, in this case the time axis with one 
                entry per hour.
@@ -787,6 +797,27 @@ Chapter 4 : Real-world data representation using tensors
         #. C = our 17 channels
         #. L = 24, 1h / day
         #. Total dimension = $N \times C \times L$
+    a) Data dimeension : 
+        #. $N \times C \times L$ where
+            * $N$ = number of samples
+            * $C$ = number of channels (i.e. columns / variables)
+            * $L$ = length, in this case 24 (h)
+        ```
+        print(bikes.shape, bikes.stride())
+        # Reshapes Tensor - 
+        #   --> last two args, say the shape we want the other two to be
+        #   --> The '-1' means to calculate the last thing based off args[1,2]
+        daily_bikes = bikes.view(-1, 24, bikes.shape[1])
+        print(daily_bikes.shape, daily_bikes.stride())
+        # (torch.Size([730, 24, 17]), (24, 1, 17520))
+
+        daily_bikes = daily_bikes.transpose(1, 2)
+        print(daily_bikes.shape,daily_bikes.stride())
+        # (torch.Size([730, 17, 24]), (24, 17520, 1))
+        ```
+        #. QUESTION : I think his bikes.stride() is WRONG?  Since it is related to
+                      storage in memory, there is a chance that it is platform 
+                      dependent
     #) The data
         #. Could chunk into 1 week (168h) period, but using daily chunks will likely
            take advantage of the daily rhythm
@@ -794,22 +825,208 @@ Chapter 4 : Real-world data representation using tensors
         #. Missing data is filled in, mostly early morning hours and assumes the
            data is 0, which is why it wasn't recorded
        
+    a) Get Bike Time sharing series
+        #. https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset
+    #) ![Fig 4.5 - Transforming a 1D, multichannel dataset into a 2D, multichannel dataset by separating the date and hour of each sample into separate axes\label{fig4.4}](figs/fig_4.4.png)
+        #. Goal is to convert flat 2D and transform it to 3D
+        #. 3rd dimension is time..
+#. 4.4.3 - Ready for training
+    a) Let's do the one-hot encoding method
+        ```
+        first_day = bikes[:24,:].long()
+        weather_onehot = torch.zeros(first_day.shape[0], 4)
+
+        # 9th column is orginal weather data
+        first_day[:,9]
+    
+        # Now use one-hot encoding, recall this is really ordinal data.., one hot
+        # encoding is best used for categorical data
+
+        # -1 b/c onehot coding is 0 indexed..
+        # --> modifies in place
+        weather_onehot.scatter_(dim=1,
+                                index=first_day[:,9].unsqueeze(1).long() -1,
+                                value=1.0)
+
+        # Append / cat onehot as columns to bikes
+        torch.cat((bikes[:24], weather_onehot), 1).shape
+
+        # Can do same w/ reshaped daily_bikes, recall shape = [730, 17, 24]
+        # --> Note here that we are making it the same dimension as the number
+        #     of days which is different from above where we only handled one day
+        daily_weather_onehot = torch.zeros(daily_bikes.shape[0], 4, 
+                                           daily_bikes.shape[2])
+        daily_weather_onehot.shape
+        # torch.Size([730, 4, 24])
+
+        # Now expand one-hot encoding
+        daily_weather_onehot.scatter_(1, daily_bikes[:,9,:].long().unsqueeze(1) - 1, 1.0)
+
+        # Now concatenate along C dimension, where shape = (B, C, L)
+        daily_bikes = torch.cat((daily_bikes, daily_weather_onehot), dim=1) 
+        daily_bikes.shape
+        # torch.Size([730, 21, 24])
+
+        # Instead of just treating like a categorical variable. 
+        # --> Normalize column 9
+        daily_bikes[:, 9, :] = (daily_bikes[:, 9, :] - 1.0) / 3.0
+        daily_bikes[:,9,:].unique()
+        # tensor([0.0000, 0.3333, 0.6667, 1.0000], dtype=torch.float64)
+
+        # df.columns[10] == temp(erature)
+        temp = daily_bikes[:, 10, :]
+        temp_min = torch.min(temp)
+        temp_max = torch.max(temp)
+        daily_bikes[:, 10, :] = ((daily_bikes[:, 10, :] - temp_min) /
+                                 (temp_max - temp_min))
+        ## Alternatively, get unitary stdev
+        daily_bikes[:, 10, :] = ((daily_bikes[:, 10, :] - torch.mean(temp)) /
+                                  torch.std(temp))
+        ```
+
+#. 4.5 - Representing text
+    a) Recurrent Neural Networks (RNN)
+        #. Successful with text categorization, text generation and automated   
+           translation systems
+    #) Transformers, more flexible to incorporate past information has made a big 
+       splash
+        #. Previously, NLP workloads had sophisticated multistage pipelines that 
+           included rules encoding grammar.
+        #. Now you just use the corpora directly, let rules emerge
+#. 4.5.1 - Converting text to numbers
+    a) Use gutenberg project (www.gutenberg.org) or Wikipedia articles
+    #) Load Jane Austen's Pride and Prejudice from Gutenber website
+        ```
+        with open('data/p1ch4/jane-austen/1342-0.txt', encoding='utf8') as f:
+            text = f.read()
+        ```
+#. 4.5.2 - One-hot-encoding characters
+    a) ASCII = 8 bits for English language
+        #. Unicode = UTF-8, UTF-16, UTF-32
+    #) Limit One-hot encoding to ASCII
+    #) Split text into lines, pick one to look at
+        ```
+        lines = text.split('\n')
+        line=lines[200]
+
+        # One hot encoding 
+        letter_t = torch.zeros(len(line), 128)
+        letter_t.shape
+        # torch.Size([70, 128])
+
+        for i, letter in enumerate(line.lower().strip()):
+            # ord maps letter to ASCII position (?)
+            letter_index = ord(letter) if ord(letter) < 128 else 0
+            letter_t[i][letter_index] = 1
+        ```
+
+#. 4.5.3 - One-hot-encoding characters
+    #) Now let's one-hot encode the words rather then letters
+        ```
+        # Strip punctuation, lowercase
+        def clean_words(input_str):
+            punctuation = '.,;:"!?”“_-'
+            word_list = input_str.lower().replace('\n',' ').split()
+            word_list = [word.strip(punctuation) for word in word_list]
+            return word_list
+
+        words_in_line = clean_words(line)
+        words_in_line
+        # ['impossible', 'mr', 'bennet', 'impossible', 'when', 'i', 'am', 'not', 'acquainted', 'with', 'him']
+
+        # Now find all unique words on corpus
+        word_list = sorted(set(clean_words(text)))
+
+        # Map a word to an index in word_list
+        word2index_dict = {word: i for (i, word) in enumerate(word_list)}
+
+        len(word2index_dict), word2index_dict['impossible']
+        # (7261, 3394)
+
+        word_t = torch.zeros(len(words_in_line), len(word2index_dict))
+        # torch.Size([11, 7261]), 11 words, 7261 options
+
+        for i, word in enumerate(words_in_line):
+            word_index = word2index_dict[word]
+            word_t[i][word_index] = 1
+            print('{:2} {:4} {}'.format(i, word_index, word))
+            #  0 3394 impossible
+            #  1 4305 mr
+            #  2  813 bennet
+            #  3 3394 impossible
+            #  4 7078 when
+            #  5 3315 i
+            #  6  415 am
+            #  7 4436 not
+            #  8  239 acquainted
+            #  9 7148 with
+            # 10 3215 him
+        ```
+    #) Trade off between character vs. word level encoding. 
+        #. Many fewer chars than words, not much meaning but short and concise
+        #. Words have actual meaning, but gets large and bloated
+    #) Compromise is to use `byte pair encoding`, use pairs of latters until reaches
+       prescribed dictionary size
+    #) ![Fig 4.6 - Three ways to encode a word \label{fig4.6}](figs/fig_4.6.png)
+
+#. 4.5.4 - Text embeddings
+    a) One-hot encoding 
+        #. Works well, but once the number of possibilities is unbounded (e.g.
+           with one book, there are over 7000 items)
+        #. Could dedupe words, condense alternate spellings, collapse past and
+           future tense. Still would be HUGE
+            * Everytime we encounter a new word, would have to add a new column to
+              the vector which would mean adding new weights to the model to
+              account for that new vocabulary entry 
+        #. How can we compress our encoding down to a more manageable size and put
+           a cap on the size growth?
+            * Instead of a sparse matrix with MANY 0's and only 1 per column, 
+              use floating point values.  Use 100 floats to represent all words.
+            * Trick is to find an effective way to map individual words into the
+              space 
+            * THIS is called an EMBEDDING
+        #. Could randomly map to words to numbers in float
+            * This would neglect distance between words based on meaning or context
+        #. Instead, could have a 2D embedding.  One axis is nouns, the other is
+           adjectives
+        #. ![Fig 4.7 - Manual Word Embeddings \label{fig4.7}](figs/fig_4.7.png)
+        #. Can use NN to automate this work, see word2vec for an example
+#. 4.5.5 - Text embeddings as a blueprint
+    a) Embeddings are useful whenever one-hot encodings become burdensome
+#. 4.6 - Conclusion
+>>>>>>> 0350865dd89babc69cc12fe715a98457049458d1
 
 
 Chapter 5 : The mechanics of learning
 =============================================
-The mechanics of learning 103
-1. A timeless lesson in modeling 104
-#. Learning is just parameter estimation 106
-A hot problem 107 Gathering some data 107 Visualizing
-the data 108 Choosing a linear model as a first try 108
-#. Less loss is what we want 109
-#. Down along the gradient 113
-Decreasing loss 113 Getting analytical 114 Iterating to fit
-the model 116 Normalizing inputs 119 Visualizing
-(again) 122
-#. PyTorch’s autograd: Backpropagating all things 123
-Computing the gradient automatically 123 Optimizers a la
+1. 5.1 - A timeless lesson in modeling
+    a) Took Kepler 6 years to figure out his laws of motion
+        #. Took data from Tycho Brahe's data
+        #. ![Fig 5.1 - Kepler considers multiple candidate models\label{fig5.1}](figs/fig_5.1.png)
+    #) Kepler's laws
+        #. First law : The orbit of every planet is an ellipse with the Sun at one
+                       of the two foci.
+        #. Second law : A line joining a planet and the Sun sweeps out equal areas
+                        during equal intervals of time”
+    #) How did Kepler get the shapes of eccentricity?
+        #. Essentially, Kepler had to try different shapes, using a certain number
+           of observations to find the curve, then use the curve to find some more
+           positions, for times when he had observations available, and then check
+           whether these calculated positions agreed with the observed one
+    #) Over six years, Kepler
+        #. Got good data from Tycho Brahe
+        #. Tried to visualize the data b/c he thought something fishy was going on 
+        #. Chose simplest possible model that had a chance to fit the data (an
+           ellipse)
+        #. Split the data so he could work on part of it and keep an independent set
+           for validation
+        #. Started w/ tentative eccentricity and size for ellipse and iterated
+           until model fit the observations
+        #. validated model on independent observations
+        #. looked back in disbelief
+
+
+
 
 
 Chapter 6 : Using a nerual network to fit the data 
