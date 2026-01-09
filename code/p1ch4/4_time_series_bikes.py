@@ -7,11 +7,20 @@ bikes_numpy = np.loadtxt("data/p1ch4/bike-sharing-dataset/hour-fixed.csv",
     skiprows=1,
     converters={1: lambda x: float(x[8:10])})
 bikes = torch.from_numpy(bikes_numpy)
-
-
 print("\n\nbikes shape and stride = {}, {}\n\n".format(bikes.shape, bikes.stride()))
-# '-1' means to infer it from the other dimensions, in this case it means each day
-#      for two years, hence is 730
+
+# NOTE : Only difference, here would be that I'd read the initial data with pandas
+#        and then still put it in pytorch and do the dimensional manipulation here
+#
+# '-1' : means to infer it from the other dimensions, in this case it means each day
+#        for two years, hence is 730
+#
+# '24' : Creating new dimension of 24 for each hour
+#
+# 'bikes.shape[1]' : '17', how many elements are in a row, i.e. stride
+#
+# Net result is that 
+
 daily_bikes = bikes.view(-1, 24, bikes.shape[1])
 daily_bikes.shape, daily_bikes.stride()
 daily_bikes = daily_bikes.transpose(1, 2)
