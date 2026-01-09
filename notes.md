@@ -763,10 +763,37 @@ Chapter 4 : Real-world data representation using tensors
         # Fraction of good wines properly identified
         print(n_matches, n_matches / n_actual)
         ```
+
 #. 4.4 - Working with time series
-    a) 
+    a) Use Washington DC bike share data.
+    #) ![Fig 4.5 - Transforming a 1D, multichannel dataset into a 2D, multichannel dataset by separating the date and hour of each sample into separate axes \label{fig4.5}](figs/fig_4.4.png)
+        #. Wants to turn 2D dataset into 3D dataset where the third dimension is
+           date, 2nd dimension is time of day [midnight -> midnight], 1st dimension
+           is float / catigorical data
+#. 4.4.1 - Adding a time dimension
+    a) Each row is separate hour of data
+    #) See Fig \label{fig4.5}
+    #) See : code/p1ch4/4_time_series_bikes.py
+    #) NN will need to see sequences of values for each different quantity
+    #) Definitions
+        #. N = parallel sequences of size C, in this case the time axis with one 
+               entry per hour.
+        #. C = channel in NN parlance, same as \emph{column} for 1D data
 
-
+#. 4.4.2 - Shaping the data by the time period
+    a) Maybe want to break up 2y dataset into wider observation periods, like days
+    #) Definitions
+        #. N = number of samples 
+        #. C = our 17 channels
+        #. L = 24, 1h / day
+        #. Total dimension = $N \times C \times L$
+    #) The data
+        #. Could chunk into 1 week (168h) period, but using daily chunks will likely
+           take advantage of the daily rhythm
+        #. All dependant on data set being divisible by 24 and not having gaps in data
+        #. Missing data is filled in, mostly early morning hours and assumes the
+           data is 0, which is why it wasn't recorded
+       
 
 
 Chapter 5 : The mechanics of learning
