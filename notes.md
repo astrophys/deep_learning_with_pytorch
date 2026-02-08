@@ -797,7 +797,8 @@ Chapter 4 : Real-world data representation using tensors
         #. C = our 17 channels
         #. L = 24, 1h / day
         #. Total dimension = $N \times C \times L$
-    a) Data dimeension : 
+    #) See : code/p1ch4/4_time_series_bikes.py
+    #) Data dimeension : 
         #. $N \times C \times L$ where
             * $N$ = number of samples
             * $C$ = number of channels (i.e. columns / variables)
@@ -809,7 +810,7 @@ Chapter 4 : Real-world data representation using tensors
         #   --> The '-1' means to calculate the last thing based off args[1,2]
         daily_bikes = bikes.view(-1, 24, bikes.shape[1])
         print(daily_bikes.shape, daily_bikes.stride())
-        # (torch.Size([730, 24, 17]), (24, 1, 17520))
+        # torch.Size([730, 17, 24]), (408, 1, 17)
 
         daily_bikes = daily_bikes.transpose(1, 2)
         print(daily_bikes.shape,daily_bikes.stride())
@@ -818,6 +819,10 @@ Chapter 4 : Real-world data representation using tensors
         #. QUESTION : I think his bikes.stride() is WRONG?  Since it is related to
                       storage in memory, there is a chance that it is platform 
                       dependent
+        #. ANSWER (maybe?) : How data is stored could be OS dependent.
+        #. Stride is telling us that advancing by 1 along the hour dimension
+           (the second dimension) requires us to advance by 17 places in the
+           storage 
     #) The data
         #. Could chunk into 1 week (168h) period, but using daily chunks will likely
            take advantage of the daily rhythm
@@ -883,6 +888,14 @@ Chapter 4 : Real-world data representation using tensors
         daily_bikes[:, 10, :] = ((daily_bikes[:, 10, :] - torch.mean(temp)) /
                                   torch.std(temp))
         ```
+    #) Many ways to handle data
+        #. With all floating point values, want to scale to either [-1,1] or [0,1]
+        #. Or can subtract mean and divide by std. dev.
+            * mean = 0, and stdev = 1
+        #. IMPORTANT
+
+    #) Definition
+        #. 'standardize' : like 'normalize' but making it unit standard deviation.
 
 #. 4.5 - Representing text
     a) Recurrent Neural Networks (RNN)
@@ -965,7 +978,7 @@ Chapter 4 : Real-world data representation using tensors
     #) Trade off between character vs. word level encoding. 
         #. Many fewer chars than words, not much meaning but short and concise
         #. Words have actual meaning, but gets large and bloated
-    #) Compromise is to use `byte pair encoding`, use pairs of latters until reaches
+    #) Compromise is to use `byte pair encoding`, use pairs of letters until reaches
        prescribed dictionary size
     #) ![Fig 4.6 - Three ways to encode a word \label{fig4.6}](figs/fig_4.6.png)
 
@@ -994,7 +1007,6 @@ Chapter 4 : Real-world data representation using tensors
 #. 4.5.5 - Text embeddings as a blueprint
     a) Embeddings are useful whenever one-hot encodings become burdensome
 #. 4.6 - Conclusion
->>>>>>> 0350865dd89babc69cc12fe715a98457049458d1
 
 
 Chapter 5 : The mechanics of learning
