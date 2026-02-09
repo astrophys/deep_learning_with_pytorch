@@ -1002,6 +1002,7 @@ Chapter 4 : Real-world data representation using tensors
             * This would neglect distance between words based on meaning or context
         #. Instead, could have a 2D embedding.  One axis is nouns, the other is
            adjectives
+            * In reality there are 100-1000 dimensions
         #. ![Fig 4.7 - Manual Word Embeddings \label{fig4.7}](figs/fig_4.7.png)
         #. Can use NN to automate this work, see word2vec for an example
 #. 4.5.5 - Text embeddings as a blueprint
