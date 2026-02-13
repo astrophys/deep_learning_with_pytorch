@@ -1037,6 +1037,47 @@ Chapter 5 : The mechanics of learning
            until model fit the observations
         #. validated model on independent observations
         #. looked back in disbelief
+    #) This is basically the same process used by modern data scientists
+#. 5.2 - Learning is just parameter estimation
+    a) Don't worry about planetary motion, focus on 2nd hardest problem in physics :
+       calibrating instruments
+        #. ![Fig 5.2 - Our mental model of the learning process\label{fig5.2}](figs/fig_5.2.png)
+    #) Training process
+        #. Forward pass : fed input data
+        #. Calculate error by comparing predicted values with ground truth
+        #. Use chain rule to calculate derivative and use it to update the weights 
+           in the direction of decreasing the error.
+        #. Complicated paragraph, you'll understand soon
+    #) Let's work with a noisy dataset, build a model and implement a learning 
+       algorithm for it. 
+        #. We'll do everything by hand and by end of chapter we'll have PyTOrch do
+           the heavy lifting.
+#. 5.2.1 - A hot problem
+    a) Convoluted problem.  We have a wall thermometer, that doesn't have units
+#. 5.2.2 - Gathering some data
+    a) See : code/p1ch5/1_parameter_estimation.py
+#. 5.2.3 - Visualizing the data
+    a) ![Fig 5.3 - Our unknown data just might follow a linear model\label{fig5.3}](figs/fig_5.3.png)
+        #. $t_c$ is on y-axis
+        #. $t_u$ is on x-axis
+        #. Looks linear
+#. 5.2.4 - Choosing a linear model as a first try
+    a) $t_c$ and $t_u$ might be linearly related.
+    #) Perhaps relation is :
+        $$
+        t_c = w \times t_u + b
+        $$
+        #. $w$ is the 'weight'
+        #. $b$ is the 'bias'
+    #) Let's fit a line..
+#. 5.3 - Less loss is what we want
+    a) DEFINITION : Loss function :
+        #. A function that computes single numerical value that learning process
+           will attempt to minimize
+    #) Loss function
+        #. 
+        
+    
 
 
 
