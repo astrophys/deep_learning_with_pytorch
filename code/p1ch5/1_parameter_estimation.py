@@ -9,9 +9,12 @@ t_u = [35.7, 55.9, 58.2, 81.9, 56.3, 48.9, 33.9, 21.8, 48.4, 60.4, 68.4]
 t_c = torch.tensor(t_c)
 t_u = torch.tensor(t_u)
 
+# Confusing that they use t_u b/c the model could be t
+# --> This is a linear model
 def model(t_u, w, b):
     return w * t_u + b
 
+# Mean square loss
 def loss_fn(t_p, t_c):
     squared_diffs = (t_p - t_c)**2
     return squared_diffs.mean()
@@ -36,30 +39,41 @@ print("y * z * a:", (y * z * a).shape)
 
 delta = 0.1
 
-loss_rate_of_change_w = \\
-    (loss_fn(model(t_u, w + delta, b), t_c) - 
-     loss_fn(model(t_u, w - delta, b), t_c)) / (2.0 * delta)
+# Here we are comparing the uncertain temps to the Truth data (t_c)
+# --> They compare model to truth, this makes sense
+loss_rate_of_change_w = ((loss_fn(model(t_u, w + delta, b), t_c) -
+                         loss_fn(model(t_u, w - delta, b), t_c)) / (2.0 * delta))
 learning_rate = 1e-2
 
+# Change weights based off gradient times learning rate
 w = w - learning_rate * loss_rate_of_change_w
 
-loss_rate_of_change_b = \\
-    (loss_fn(model(t_u, w, b + delta), t_c) - 
-     loss_fn(model(t_u, w, b - delta), t_c)) / (2.0 * delta)
+loss_rate_of_change_b = ((loss_fn(model(t_u, w, b + delta), t_c) -
+                          loss_fn(model(t_u, w, b - delta), t_c)) / (2.0 * delta))
 
 b = b - learning_rate * loss_rate_of_change_b
+
+### It is weird having functions take arguments that they don't use...
+
+# derivative = \frac{d loss_fun}{d t_p}
 def dloss_fn(t_p, t_c):
     dsq_diffs = 2 * (t_p - t_c) / t_p.size(0)  # <1>
     return dsq_diffs
+
+# derivative = \frac{d model}{dw}
 def dmodel_dw(t_u, w, b):
     return t_u
+
+# derivative = \frac{d model}{db}
 def dmodel_db(t_u, w, b):
     return 1.0
+
 def grad_fn(t_u, t_c, t_p, w, b):
     dloss_dtp = dloss_fn(t_p, t_c)
     dloss_dw = dloss_dtp * dmodel_dw(t_u, w, b)
     dloss_db = dloss_dtp * dmodel_db(t_u, w, b)
     return torch.stack([dloss_dw.sum(), dloss_db.sum()])  # <1>
+
 def training_loop(n_epochs, learning_rate, params, t_u, t_c):
     for epoch in range(1, n_epochs + 1):
         w, b = params
@@ -123,23 +137,22 @@ params = training_loop(
     t_c = t_c,
     print_params = False)
 
-%matplotlib inline
+#%matplotlib inline
 from matplotlib import pyplot as plt
 
 t_p = model(t_un, *params)  # <1>
 
 fig = plt.figure(dpi=600)
-plt.xlabel(\Temperature (°Fahrenheit)\)
-plt.ylabel(\Temperature (°Celsius)\)
+plt.xlabel('Temperature (°Fahrenheit)')
+plt.ylabel('Temperature (°Celsius)')
 plt.plot(t_u.numpy(), t_p.detach().numpy()) # <2>
 plt.plot(t_u.numpy(), t_c.numpy(), 'o')
-plt.savefig(\temp_unknown_plot.png\, format=\png\)  # bookskip
-%matplotlib inline
-from matplotlib import pyplot as plt
+plt.savefig('temp_unknown_plot.png', format='png')  # bookskip
+
 
 fig = plt.figure(dpi=600)
-plt.xlabel(\Measurement\)
-plt.ylabel(\Temperature (°Celsius)\)
+plt.xlabel('Measurement')
+plt.ylabel('Temperature (°Celsius)')
 plt.plot(t_u.numpy(), t_c.numpy(), 'o')
 
-plt.savefig(\temp_data_plot.png\, format=\png\)
+plt.savefig('temp_data_plot.png', format='png')

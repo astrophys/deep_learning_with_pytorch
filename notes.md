@@ -1,3 +1,44 @@
+<!--
+Compile :
+    pandoc -f markdown notes/sample_notes.md - -filter pandoc-crossref -t latex -o notes.p
+
+Notes:
+    1. http://lierdakil.github.io/pandoc-crossref/
+
+To Do :
+    1. Add \bcancelto from https://tex.stackexchange.com/a/218430/84495
+    2. checkmarks https://tex.stackexchange.com/a/132785/84495
+-->
+
+
+<!--
+    YAML section
+-->
+---
+title: These are the notes reading Deep_Learning_with_PyTorch_by_Stevens.pdf
+author: Ali Snedden
+date: 2026-02-19
+abstract: These are my notes reading Deep_Learning_with_PyTorch_by_Stevens.pdf
+
+...
+---
+header-includes:
+  - \hypersetup{colorlinks=true,
+            urlcolor=blue,
+            pdfborderstyle={/S/U/W 1}}
+    \usepackage{physics}
+    \usepackage{cancel}
+    \usepackage{amssymb}
+---
+\definecolor{codegray}{gray}{0.9}
+\newcommand{\code}[1]{\colorbox{codegray}{\texttt{#1}}}
+
+\maketitle
+\tableofcontents
+\pagebreak
+
+
+
 Chapter 1 : Introducing deep learning and the Pytorch Library
 =============================================
 1. Intro
@@ -1075,11 +1116,53 @@ Chapter 5 : The mechanics of learning
         #. A function that computes single numerical value that learning process
            will attempt to minimize
     #) Loss function
-        #. 
-        
-    
-
-
+        #. Difference between truth and predicted output values
+        #. In this case it would be $t_p - t_c$
+        #. Want it to be a positive value, so options are
+            #. $\abs(t_p - t_c)$ or $(t_p - t_c)^{2}$
+            #. Both have a min at 0 and tro monotonically (i.e. it never decreases)
+            #. Both are called \emph{convex}
+        #. ![Fig 5.4 - Absolute difference verses difference squared\label{fig5.4}](figs/fig_5.4.png)
+        #. Since model is linear, loss as a function of $w$ and $b$
+        #. Prefer $(t_p - t_c)^{2}$
+#. 5.3.1 - From problem back to PyTorch
+    a) See code/p1ch5/1_parameter_estimation.py for this section
+#. 5.4 - Down along the gradient
+    a) Use gradient descent for optimization
+    #) ![Fig 5.5 - A cartoon depiction of the optimization process, where a person with knobs for $w$ and $b$ searches for the direction to turn the knobs that make the loss decrease \label{fig5.5}](figs/fig_5.5.png)
+#. 5.4.1 - Decreasing loss
+    a) Goal is to compute the rate of change of the loss w/r/t each parameter and
+       modify each parameter in direction of decreasing loss.
+        #. eqn 
+            $$
+                loss_rate_of_change_w = \
+                    \frac{(loss_{fn}(model(t_{u}, w + delta, b), t_{c}) - 
+                          loss_{fn}(model(t_{u}, w - delta, b), t_{c}))}{2 * delta} 
+            $$
+        #. This is simple the $(final - initial) / dx$
+    #) See : `code/p1ch5/1_parameter_estimation.py` for further notes
+        #. Key takeaways : 
+            * loss function compares 'model' to 'truth' values
+#. 5.4.2 - Getting analytical
+    a) It is challenging to know what delta should be
+    #) ![Fig 5.6 - Differences in the estimated directions for descent when evaluating them at discrete locations vs. analytically \label{fig5.6}](figs/fig_5.6.png)
+    #) Computing the derivatives
+        #. Compute derivative of loss function...use chain rule
+            * Recall $t_c$ is the truth value, $t_p$ is the value predicted by model
+        $$
+            \frac{d loss_fn}{dw} 
+                \& = \frac{d \frac{\sum_{i}^{N} (t_p - t_c)^{2}}{N}}{dw}    \\
+                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw} - \cancelto{0}{\frac{d t_c}{dw}})   \\
+                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw})        \\
+                # b/c t_p is predicted by model, lets sub           \\
+                # model(t_u, w, b) = w * t_u + b = t_p              \\
+                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d (w \times t_u + b}}{dw}))    \\
+                \& = 2 \frac{(t_p - t_c)}{N} \times (t_u)                     \\
+        $$
+    #) QUESTION : On p115, how doe they end up with $t_p.size(0)$
+        #. ANSWER : loss function actually returns squared_diffs.mean()
+        #. ANSWER : Turns out that part of the issue is that they don't do the 
+                    full chain rule in this equation
 
 
 
