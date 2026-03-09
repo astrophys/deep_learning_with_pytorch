@@ -1149,21 +1149,58 @@ Chapter 5 : The mechanics of learning
     #) Computing the derivatives
         #. Compute derivative of loss function...use chain rule
             * Recall $t_c$ is the truth value, $t_p$ is the value predicted by model
-        $$
-            \frac{d loss_fn}{dw} 
-                \& = \frac{d \frac{\sum_{i}^{N} (t_p - t_c)^{2}}{N}}{dw}    \\
-                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw} - \cancelto{0}{\frac{d t_c}{dw}})   \\
-                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw})        \\
-                # b/c t_p is predicted by model, lets sub           \\
-                # model(t_u, w, b) = w * t_u + b = t_p              \\
-                \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d (w \times t_u + b}}{dw}))    \\
-                \& = 2 \frac{(t_p - t_c)}{N} \times (t_u)                     \\
-        $$
+            * as a function of $dw$
+                $$
+                    \frac{d loss_fn}{dw} 
+                        \& = \frac{d \frac{\sum_{i}^{N} (t_p - t_c)^{2}}{N}}{dw}    \\
+                        \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw} - \cancelto{0}{\frac{d t_c}{dw}})   \\
+                        \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d t_p}{dw})        \\
+                        # b/c t_p is predicted by model, lets sub           \\
+                        # model(t_u, w, b) = w * t_u + b = t_p              \\
+                        \& = 2 \frac{(t_p - t_c)}{N} \times (\frac{d (w \times t_u + b}}{dw}))    \\
+                        \& = 2 \frac{(t_p - t_c)}{N} \times (t_u)                     \\
+                $$
+            * as a function of $db$
+                $$
+                    \frac{d loss_fn}{db} 
+                        \& = \frac{d loss_fn}{d t_{p}} \frac{d t_{p}}{db}   \\
+                        \& = \frac{d \frac{\sum_{i}^{N} (t_p - t_c)^{2}}{N}}{d t_{p}} \frac{d t_{p}}{db}   \\
+                        \& = 2 \frac{\sum_{i}^{N} (t_p - t_c)}{N}\cancelto{1}{\frac{d t_{p}}{d t_{p}}} \frac{d t_{p}}{db}   \\
+                        \& = 2 \frac{\sum_{i}^{N} (t_p - t_c)}{N} \frac{d (w \times [t_{u1}, t_{u2}, ..., t_{uN}] + b}{db}   \\
+                        \& = 2 \frac{\sum_{i}^{N} (t_p - t_c)}{N} \cancelto{1}{\frac{db}{db}}   \\
+                        \& = 2 \frac{\sum_{i}^{N} (t_p - t_c)}{N} \\
+                $$
+    #) ![Fig 5.7 - The derivative of the loss function with respect to the weights\label{fig5.7}](figs/fig_5.7.png)
     #) QUESTION : On p115, how doe they end up with $t_p.size(0)$
         #. ANSWER : loss function actually returns squared_diffs.mean()
         #. ANSWER : Turns out that part of the issue is that they don't do the 
                     full chain rule in this equation
+    #) Defining the Gradient Function
+        #. 
+#. 5.4.3 - Iterating to fit the model
+    a) One step in a training loop where params for all training samples is an
+       `epoch`
+    #) QUESTION : Why in code/p1ch5/1_parameter_estimation.py is grad_fn do a 
+                  'sum' at the end?  
+        #. ANSWER : 
+    #) See : code/p1ch5/1_parameter_estimation.py for details
+        #. LOOP 1 : does NOT converge
+            * Overtraining
+            * ![Fig 5.8 - Diverging optimization on a convex function (parabola-like) due to large steps. Bottom : Converging optimization with small steps\label{fig5.8}](figs/fig_5.8.png)
+            * Can do \emph{hyperparameter tuning}...e.g. making a smaller learning
+              rate
+            * Usually change learning rate by orders of magnitude
+        #. LOOP 2 : 
+            * w/ learning_rate = 1e-4
+            * It is stable, but stalls out.
+            * Could do \emph{adaptive} learning rate...
+#. 5.4.4 - Normalizing Inputs
+    a) At somepoint in LOOP 2, the ratio of the gradient $\frac{w}{b} \sim 60$
+        #. Issue is that changes in $w$ COMPLETELY outweigh changes in the bias.
+        #. Scaling at different scales is a big Gotchya
+        #. Really need a different learning rate
 
+#. TO DO : Answer why .sum is at end of grad function above...
 
 
 Chapter 6 : Using a nerual network to fit the data 

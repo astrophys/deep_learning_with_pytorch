@@ -68,25 +68,77 @@ def dmodel_dw(t_u, w, b):
 def dmodel_db(t_u, w, b):
     return 1.0
 
+# This is a vector
 def grad_fn(t_u, t_c, t_p, w, b):
     dloss_dtp = dloss_fn(t_p, t_c)
     dloss_dw = dloss_dtp * dmodel_dw(t_u, w, b)
     dloss_db = dloss_dtp * dmodel_db(t_u, w, b)
     return torch.stack([dloss_dw.sum(), dloss_db.sum()])  # <1>
 
+
 def training_loop(n_epochs, learning_rate, params, t_u, t_c):
+    """
+
+    Args :
+        n_epochs      = number of iterations for training loop
+        learning_rate = float, less than 1
+        params        = tuple, w (weights), b (offset)
+        t_u           = temperature in unknown units
+        t_c           = truth value in celcius
+
+    Returns :
+    Raises :
+    """
     for epoch in range(1, n_epochs + 1):
         w, b = params
 
+        # Forward pass
         t_p = model(t_u, w, b)  # <1>
+        # Question : What is the point of the below line? grad_fun calls loss_fn
+        #            directly?
         loss = loss_fn(t_p, t_c)
+        # Backward pass
         grad = grad_fn(t_u, t_c, t_p, w, b)  # <2>
 
         params = params - learning_rate * grad
 
-        print('Epoch %d, Loss %f' % (epoch, float(loss))) # <3>
+        if epoch % 10 == 0:
+            print(f'Epoch {epoch}, Loss {loss:.4f}, grad (w,b) = ({grad[0]:.4f}, {grad[1]:.4f})') # <3>
 
     return params
+
+
+
+### This loop does NOT converge
+# LOOP 1
+print(f'\n\nn_epochs = 100, learning_rate = 1e-2')
+training_loop(
+    n_epochs = 100,
+    learning_rate = 1e-2,
+    params = torch.tensor([1.0, 0.0]),
+    t_u = t_u,
+    t_c = t_c)
+
+# LOOP 2
+print(f'\n\nn_epochs = 100, learning_rate = 1e-4')
+training_loop(
+    n_epochs = 100,
+    learning_rate = 1e-4,
+    params = torch.tensor([1.0, 0.0]),
+    t_u = t_u,
+    t_c = t_c)
+
+# LOOP 3
+print(f'\n\nn_epochs = 100, learning_rate = 1e-2')
+t_un = 0.1 * t_u
+training_loop(
+    n_epochs = 100,
+    learning_rate = 1e-2,
+    params = torch.tensor([1.0, 0.0]),
+    t_u = t_un, # <1>
+    t_c = t_c)
+
+# Ali commented b/c it is defined above...
 def training_loop(n_epochs, learning_rate, params, t_u, t_c,
                   print_params=True):
     for epoch in range(1, n_epochs + 1):
@@ -110,30 +162,14 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c,
             break  # <3>
 
     return params
-training_loop(
-    n_epochs = 100, 
-    learning_rate = 1e-2, 
-    params = torch.tensor([1.0, 0.0]), 
-    t_u = t_u, 
-    t_c = t_c)
-training_loop(
-    n_epochs = 100, 
-    learning_rate = 1e-4, 
-    params = torch.tensor([1.0, 0.0]), 
-    t_u = t_u, 
-    t_c = t_c)
-t_un = 0.1 * t_u
-training_loop(
-    n_epochs = 100, 
-    learning_rate = 1e-2, 
-    params = torch.tensor([1.0, 0.0]), 
-    t_u = t_un, # <1>
-    t_c = t_c)
+
+# LOOP 4
+print(f'n_epochs = 5000, learning_rate = 1e-2')
 params = training_loop(
-    n_epochs = 5000, 
-    learning_rate = 1e-2, 
-    params = torch.tensor([1.0, 0.0]), 
-    t_u = t_un, 
+    n_epochs = 5000,
+    learning_rate = 1e-2,
+    params = torch.tensor([1.0, 0.0]),
+    t_u = t_un,
     t_c = t_c,
     print_params = False)
 
