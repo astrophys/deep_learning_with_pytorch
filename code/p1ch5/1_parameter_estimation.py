@@ -103,7 +103,7 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c):
         params = params - learning_rate * grad
 
         if epoch % 10 == 0:
-            print(f'Epoch {epoch}, Loss {loss:.4f}, grad (w,b) = ({grad[0]:.4f}, {grad[1]:.4f})') # <3>
+            print(f'Epoch {epoch}, Loss {loss:.4f}, grad(w,b) = ({grad[0]:.4f}, {grad[1]:.4f}), params (w,b) = ({params[0]:.4f}, {params[1]:.4f}') # <3>
 
     return params
 
@@ -111,7 +111,8 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c):
 
 ### This loop does NOT converge
 # LOOP 1
-print(f'\n\nn_epochs = 100, learning_rate = 1e-2')
+print(f'\n\nLoop 1')
+print(f'n_epochs = 100, learning_rate = 1e-2')
 training_loop(
     n_epochs = 100,
     learning_rate = 1e-2,
@@ -120,7 +121,8 @@ training_loop(
     t_c = t_c)
 
 # LOOP 2
-print(f'\n\nn_epochs = 100, learning_rate = 1e-4')
+print(f'\n\nLoop 2')
+print(f'n_epochs = 100, learning_rate = 1e-4')
 training_loop(
     n_epochs = 100,
     learning_rate = 1e-4,
@@ -129,7 +131,11 @@ training_loop(
     t_c = t_c)
 
 # LOOP 3
-print(f'\n\nn_epochs = 100, learning_rate = 1e-2')
+print(f'\n\nLoop 3')
+print(f'n_epochs = 100, learning_rate = 1e-2')
+# Section 5.4.4
+#   --> Not normalizing, but just scaling down
+#   --> Note that learning rate is 100x larger than Loop 2, with similar results
 t_un = 0.1 * t_u
 training_loop(
     n_epochs = 100,
@@ -152,9 +158,8 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c,
 
         if epoch in {1, 2, 3, 10, 11, 99, 100, 4000, 5000}:  # <3>
             print('Epoch %d, Loss %f' % (epoch, float(loss)))
-            if print_params:
-                print('    Params:', params)
-                print('    Grad:  ', grad)
+            print('    Params:', params)
+            print('    Grad:  ', grad)
         if epoch in {4, 12, 101}:
             print('...')
 
@@ -164,6 +169,7 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c,
     return params
 
 # LOOP 4
+print(f'\n\nLoop 4')
 print(f'n_epochs = 5000, learning_rate = 1e-2')
 params = training_loop(
     n_epochs = 5000,
@@ -175,6 +181,7 @@ params = training_loop(
 
 #%matplotlib inline
 from matplotlib import pyplot as plt
+print(f'Final Params = {params}')
 
 t_p = model(t_un, *params)  # <1>
 
@@ -183,7 +190,7 @@ plt.xlabel('Temperature (°Fahrenheit)')
 plt.ylabel('Temperature (°Celsius)')
 plt.plot(t_u.numpy(), t_p.detach().numpy()) # <2>
 plt.plot(t_u.numpy(), t_c.numpy(), 'o')
-plt.savefig('temp_unknown_plot.png', format='png')  # bookskip
+plt.savefig('fig_5.9_unknown_plot.png', format='png')  # bookskip
 
 
 fig = plt.figure(dpi=600)
@@ -191,4 +198,4 @@ plt.xlabel('Measurement')
 plt.ylabel('Temperature (°Celsius)')
 plt.plot(t_u.numpy(), t_c.numpy(), 'o')
 
-plt.savefig('temp_data_plot.png', format='png')
+plt.savefig('fig_5.9_data_plot.png', format='png')

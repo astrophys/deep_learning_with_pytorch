@@ -1199,6 +1199,55 @@ Chapter 5 : The mechanics of learning
         #. Issue is that changes in $w$ COMPLETELY outweigh changes in the bias.
         #. Scaling at different scales is a big Gotchya
         #. Really need a different learning rate
+    #) See Loop2, w/ learning_rate = 1e-4
+        #. levels hout at w.sum(), b.sum() = (-0.0533, 3.0231)
+        #. QUESTION : I think there is a typo somewhere b/c for me it is $b$ that
+                      is 50x larger. Thoughts?
+        #. ANSWER : Maybe (?) I was printing the \emph{gradient} NOT the parameters
+            * Final values of (w,b) = (0.2327, -0.0438)
+    #) For Loop 3 :
+        #. Not normalizing, but just scaling down
+        #. Note that learning rate is 100x larger than Loop 2, with similar results
+        #. Multiple ways to 'beat params' into submission.  Normalizing (or close
+           to it) is the easiest thing to do.
+    #) For Loop 4 : 
+        #. Converges to :     Params: tensor([  5.3671, -17.3012])
+        #. Concludes it was showing Fahrenheit all along..
+            * QUESTION : How?
+                ```
+                (Pdb) 5.3671 / -17.3012
+                -0.310215476383141
+                (Pdb) (5.3671 / -17.3012)**-1
+                -3.223565799034861
+                ```
+            * ANSWER :
+                #. Equation for converting Fareinheit to Celcius is 
+                    $$
+                        T_{C} &= (T_{F} - 32) \times \frac{5}{9} \\
+                              &= (T_{F} - 32) \times \frac{5}{9} \\
+                              &= \frac{5}{9} T_{F} - 17.7 \\
+                    $$
+                #. Note that our final params are $[w,b] = [5.3671, -17.3012]$. 
+                #. We need to divide our $w$ by 10 and we get close to $\frac{5}{9}$
+#. 5.4.5 - Visualizing (again)
+    a) The plot :
+        * ![Fig 5.9 - The plot of our linear-fit model vs input data \label{fig5.9}](figs/fig_5.9.png)
+#. 5.5 - PyTorch's autograd: Backpropagating all things
+    a) Basic requirement is taht all functions we work with are differentiable
+    #) In this example, the derivative was computed analytically
+        #. Not feasable for complex models
+    #) PyTorch autograd to the rescue!
+#. 5.5.1 - Computing the gradient automaticall
+    a) PyTorch autograd to the rescue!
+        #. PyTorch tensors remember where they come from in terms of operations and
+           parent tensors that originated them
+        #. Can automatically provid chain of derivatives of such operations w/r/t
+           inputs
+        #. Ergo, we don't need to derive derivatives by hand...hooray
+    #) Applying autograd, see : code/p1ch5/2_autograd.ipynb
+
+
+
 
 #. TO DO : Answer why .sum is at end of grad function above...
 
