@@ -1245,6 +1245,8 @@ Chapter 5 : The mechanics of learning
            inputs
         #. Ergo, we don't need to derive derivatives by hand...hooray
     #) Applying autograd, see : code/p1ch5/2_autograd.ipynb
+    #) Using the Grad Attribute
+    #) p124
 
 
 
