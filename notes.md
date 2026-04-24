@@ -1233,11 +1233,11 @@ Chapter 5 : The mechanics of learning
     a) The plot :
         * ![Fig 5.9 - The plot of our linear-fit model vs input data \label{fig5.9}](figs/fig_5.9.png)
 #. 5.5 - PyTorch's autograd: Backpropagating all things
-    a) Basic requirement is taht all functions we work with are differentiable
+    a) Basic requirement is that all functions we work with are differentiable
     #) In this example, the derivative was computed analytically
         #. Not feasable for complex models
     #) PyTorch autograd to the rescue!
-#. 5.5.1 - Computing the gradient automaticall
+#. 5.5.1 - Computing the gradient automatically
     a) PyTorch autograd to the rescue!
         #. PyTorch tensors remember where they come from in terms of operations and
            parent tensors that originated them
@@ -1246,6 +1246,21 @@ Chapter 5 : The mechanics of learning
         #. Ergo, we don't need to derive derivatives by hand...hooray
     #) Applying autograd, see : code/p1ch5/2_autograd.ipynb
     #) Using the Grad Attribute
+        #. Notice `requires_grad=True`, tells any daughter tensor of operations
+           with `params` (a tensor) will have access to the derivative populated as
+           grad attribute of the `params` tensor
+        #. In general, all PyTorch tensors have an attribute named `grad`
+            * Normally its `None`
+        #. To populate gradient, just need to start w/ a tensor with
+           `requires_grad=True`
+            * Call model, compute the loss, then call backward on the `loss` tensor
+        #. NOTE : passing `*params` to model() is SHORT HAND for unpacking 
+                  variables
+        * ![Fig 5.10 - The forward graph and backward graph of the model as computed with autograd \label{fig5.10}](figs/fig_5.10.png)
+    #) QUESTION : 
+        * In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want the
+          direction?
+
     #) p124
 
 

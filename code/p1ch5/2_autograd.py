@@ -14,10 +14,11 @@ def model(t_u, w, b):
 
 
 def loss_fn(t_p, t_c):
+    # Why square, don't we want direction?
     squared_diffs = (t_p - t_c)**2
     return squared_diffs.mean()
 
-
+# Starting guess
 params = torch.tensor([1.0, 0.0], requires_grad=True)
 
 print(params.grad is None)
@@ -44,6 +45,7 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c):
         if epoch % 500 == 0:
             print('Epoch %d, Loss %f' % (epoch, float(loss)))
     return params
+
 training_loop(
     n_epochs = 5000,
     learning_rate = 1e-2,
