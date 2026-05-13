@@ -23,6 +23,7 @@ params = torch.tensor([1.0, 0.0], requires_grad=True)
 
 print(params.grad is None)
 
+# *params causes loss_fn to be called on each element in params tensor
 loss = loss_fn(model(t_u, *params), t_c)
 loss.backward()
 params.grad

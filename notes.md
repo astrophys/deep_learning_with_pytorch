@@ -1249,6 +1249,7 @@ Chapter 5 : The mechanics of learning
         #. Notice `requires_grad=True`, tells any daughter tensor of operations
            with `params` (a tensor) will have access to the derivative populated as
            grad attribute of the `params` tensor
+            * NOTE : that this is put on the parent tensor...
         #. In general, all PyTorch tensors have an attribute named `grad`
             * Normally its `None`
         #. To populate gradient, just need to start w/ a tensor with
@@ -1256,17 +1257,25 @@ Chapter 5 : The mechanics of learning
             * Call model, compute the loss, then call backward on the `loss` tensor
         #. NOTE : passing `*params` to model() is SHORT HAND for unpacking 
                   variables
-        * ![Fig 5.10 - The forward graph and backward graph of the model as computed with autograd \label{fig5.10}](figs/fig_5.10.png)
+        #. ![Fig 5.10 - The forward graph and backward graph of the model as computed with autograd \label{fig5.10}](figs/fig_5.10.png)
+            * When `loss.backward()` is called, PyTorch traverses the graph in the 
+              reverse direction to compute the gradients
     #) QUESTION : 
         * In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want the
           direction?
+        * What happens if there is a daughter tensor who has two parents, one
+          with `requires_grad=True` and the other is `requires_grad=False`
 
-    #) p124
+    #) 
+    #) p125
 
 
 
 
-#. TO DO : Answer why .sum is at end of grad function above...
+#. TO DO :
+    a) Answer why .sum is at end of grad function above...
+        #. 20260424 - already answered?
+    #) Derive how logic would work for pytorch to do back propagation
 
 
 Chapter 6 : Using a nerual network to fit the data 
