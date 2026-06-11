@@ -2,8 +2,11 @@
 import numpy as np
 import torch
 torch.set_printoptions(edgeitems=2)
+# 'Celcius' values
 t_c = torch.tensor([0.5, 14.0, 15.0, 28.0, 11.0, 8.0,
                     3.0, -4.0, 6.0, 13.0, 21.0])
+
+# 'Unknown' values
 t_u = torch.tensor([35.7, 55.9, 58.2, 81.9, 56.3, 48.9,
                     33.9, 21.8, 48.4, 60.4, 68.4])
 t_un = 0.1 * t_u
@@ -16,6 +19,8 @@ def model(t_u, w, b):
 def loss_fn(t_p, t_c):
     # Why square, don't we want direction?
     squared_diffs = (t_p - t_c)**2
+    # In Python, **2 squares 'element-wise'.  Doing a 'mean' is effectively like
+    # doing a dot product w/ a scaling factor of \frac{1}{N}
     return squared_diffs.mean()
 
 # Starting guess
@@ -23,9 +28,75 @@ params = torch.tensor([1.0, 0.0], requires_grad=True)
 
 print(params.grad is None)
 
+# Let's analytically calculate for t_c[0], t_u[0]
+#   A simple linear model takes 'unknown' input and returns 'predicted' values :
+#       $$
+#           m(t_{u}, w, b) & = w \times t_{u} + b
+#                          & = t_{p}
+#       $$
+#
+#   Loss function takes the difference between the 'known' celcius values and the
+#   'predicted' values from the model.
+#
+#       $$
+#           params = [1.0, 0.0]
+#
+#           t_{p} & = m(t_{u}, *params)
+#                 & = m(t_{u}, w=params[0], b=params[1])
+#                 & = w \times t_{u} + b
+#                 & = params[0] \times t_{u} + params[1]
+#
+#           loss_fn(t_{p}, t_{c})               \\
+#                 & = (t_{p} - t_{c})^{2}
+#                 & = ((w \times t_{u} + b) - t_{c})^{2}
+#                 & = ((params[0] \times t_{u} + params[1]) - t_{c})^{2}
+#
+#       $$
+#
+#
+#   Compute Derivative w/r/t $w$
+#       $$
+#           \frac{d loss_fn}{dw} \\
+#                 & = \frac{d ((w \times t_{u} + b) - t_{c})^{2}}{dw}
+#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times \frac{d ((w \times t_{u} + b) - t_{c})}{dw}
+#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times t_{u}
+#
+#       $$
+#
+#
+#   Compute Derivative w/r/t $b$
+#       $$
+#           \frac{d loss_fn}{db} \\
+#                 & = \frac{d ((w \times t_{u} + b) - t_{c})^{2}}{db}
+#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times \frac{d ((w \times t_{u} + b) - t_{c})}{db}
+#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times 1
+#       $$
+#
+#
+#
 # *params causes loss_fn to be called on each element in params tensor
 loss = loss_fn(model(t_u, *params), t_c)
+# --> Equivalent to ((t_c - model(t_u, params[0], params[1]))**2).mean()
 loss.backward()
+# --> From above : derivative w/r/t $w$
+#   $$
+#     \frac{d loss_fn}{dw} & = 2 \times ((w \times t_{u} + b) - t_{c}) \times t_{u}
+#                          & = 2 * ((params[0] * t_u + params[1]) - t_c) * t_u
+#                          & = ( 2 * ((params[0] * t_u + params[1]) - t_c) * t_u).mean()
+#                          & = 4517.2964
+#   $$
+#
+# --> From above : derivative w/r/t $b$
+#   $$
+#     \frac{d loss_fn}{dw} & = 2 \times ((w \times t_{u} + b) - t_{c}) \times 1
+#                          & = 2 * ( (params[0] * t_u + params[1]) - t_c).mean()
+#                          & = ((2 * ((params[0] * t_u + params[1]) - t_c))).mean()
+#                          & = 82.6
+#   $$
+#
+# Now :
+#   (Pdb) p params.grad
+#   tensor([4517.2969,   82.6000])
 params.grad
 
 

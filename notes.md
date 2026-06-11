@@ -1265,8 +1265,16 @@ Chapter 5 : The mechanics of learning
           direction?
         * What happens if there is a daughter tensor who has two parents, one
           with `requires_grad=True` and the other is `requires_grad=False`
-
-    #) 
+    #) QUESTION (20260527) : 
+        * I don't understand 5.10 given the derivatives that I calculated in 
+          code/p1ch5/2_autograd.py
+            + Also, what does the yellow arrow mean?  The inverse operation?
+        * Where is the 'mean' in Fig 5.10
+        * Why in 5.10 a is $x$ requires_grad=False?
+        * Where is the 'mean' in fig 5.10?
+    #) GOTCHYA :
+        * tensor.backward() 'accumulates' the derivatives. Therefore at each 
+          step in the loop, you very likely need to 'zero' it out.
     #) p125
 
 
