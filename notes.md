@@ -1120,11 +1120,11 @@ Chapter 5 : The mechanics of learning
         #. In this case it would be $t_p - t_c$
         #. Want it to be a positive value, so options are
             #. $\abs(t_p - t_c)$ or $(t_p - t_c)^{2}$
-            #. Both have a min at 0 and tro monotonically (i.e. it never decreases)
+            #. Both have a min at 0 and grow monotonically (i.e. it never decreases)
             #. Both are called \emph{convex}
         #. ![Fig 5.4 - Absolute difference verses difference squared\label{fig5.4}](figs/fig_5.4.png)
         #. Since model is linear, loss as a function of $w$ and $b$
-        #. Prefer $(t_p - t_c)^{2}$
+        #. Prefer $(t_p - t_c)^{2}$ b/c it is nicer behaved around min.
 #. 5.3.1 - From problem back to PyTorch
     a) See code/p1ch5/1_parameter_estimation.py for this section
 #. 5.4 - Down along the gradient

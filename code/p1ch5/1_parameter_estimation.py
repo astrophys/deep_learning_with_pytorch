@@ -11,12 +11,26 @@ t_u = torch.tensor(t_u)
 
 # Confusing that they use t_u b/c the model could be t
 # --> This is a linear model
+# --> t_u, w and b are all tensors of 'N' length [i.e. len(t_c)], but 'w' and 'b'
+#     are single valued, they are just tensors to make the math easier.
 def model(t_u, w, b):
     return w * t_u + b
 
 # Mean square loss
 def loss_fn(t_p, t_c):
     squared_diffs = (t_p - t_c)**2
+    # Recall eq 2.9 from ESL by Hastie, squared loss function, this is necessary
+    # b/c we want ONE coefficient to describe the slope of ALL the points, hence we
+    # need the information from EACH point and we use the mean.
+    # It is better understood from that context.  Eq 2.5 and 2.6 help with
+    # this as well and it is easy to see the relation.
+    #
+    # Per this book
+    #   (p109) : "computes a single numerical value that the learning
+    #             process will attempt to minimize"
+    #
+    #   (p111) : aka : "mean square loss"
+    #
     return squared_diffs.mean()
 
 w = torch.ones(())
@@ -41,6 +55,7 @@ delta = 0.1
 
 # Here we are comparing the uncertain temps to the Truth data (t_c)
 # --> They compare model to truth, this makes sense
+# --> Calculating discrete derivative by getting slope in neighborhood
 loss_rate_of_change_w = ((loss_fn(model(t_u, w + delta, b), t_c) -
                          loss_fn(model(t_u, w - delta, b), t_c)) / (2.0 * delta))
 learning_rate = 1e-2
@@ -48,6 +63,7 @@ learning_rate = 1e-2
 # Change weights based off gradient times learning rate
 w = w - learning_rate * loss_rate_of_change_w
 
+# --> Calculating discrete derivative by getting slope in neighborhood
 loss_rate_of_change_b = ((loss_fn(model(t_u, w, b + delta), t_c) -
                           loss_fn(model(t_u, w, b - delta), t_c)) / (2.0 * delta))
 
