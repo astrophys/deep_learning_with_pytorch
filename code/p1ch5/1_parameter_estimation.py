@@ -56,6 +56,7 @@ delta = 0.1
 # Here we are comparing the uncertain temps to the Truth data (t_c)
 # --> They compare model to truth, this makes sense
 # --> Calculating discrete derivative by getting slope in neighborhood
+# --> This carries slope direction information
 loss_rate_of_change_w = ((loss_fn(model(t_u, w + delta, b), t_c) -
                          loss_fn(model(t_u, w - delta, b), t_c)) / (2.0 * delta))
 learning_rate = 1e-2
@@ -86,9 +87,13 @@ def dmodel_db(t_u, w, b):
 
 # This is a vector
 def grad_fn(t_u, t_c, t_p, w, b):
+    # Chain ruled used below
     dloss_dtp = dloss_fn(t_p, t_c)
     dloss_dw = dloss_dtp * dmodel_dw(t_u, w, b)
     dloss_db = dloss_dtp * dmodel_db(t_u, w, b)
+    # Recall loss_fn() uses 'mean'
+    # --> numerator is carried by 'sum' below
+    # --> denominator is carried above in dloss_fn by t_p.size(0)
     return torch.stack([dloss_dw.sum(), dloss_db.sum()])  # <1>
 
 
@@ -112,6 +117,7 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c):
         t_p = model(t_u, w, b)  # <1>
         # Question : What is the point of the below line? grad_fun calls loss_fn
         #            directly?
+        # Answer : for the diagnostic printing line
         loss = loss_fn(t_p, t_c)
         # Backward pass
         grad = grad_fn(t_u, t_c, t_p, w, b)  # <2>

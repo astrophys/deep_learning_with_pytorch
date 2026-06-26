@@ -17,10 +17,14 @@ def model(t_u, w, b):
 
 
 def loss_fn(t_p, t_c):
-    # Why square, don't we want direction?
+    # Q : Why square, don't we want direction?
+    # --> A : We get the direction from the derivative of the loss_fn()
     squared_diffs = (t_p - t_c)**2
     # In Python, **2 squares 'element-wise'.  Doing a 'mean' is effectively like
     # doing a dot product w/ a scaling factor of \frac{1}{N}
+    # --> Recall from ESL by Hastie, this is effectively the squared error loss
+    # --> We want a single scalar value for the slope of the line, so information
+    #     from all points need included.
     return squared_diffs.mean()
 
 # Starting guess
@@ -41,35 +45,62 @@ print(params.grad is None)
 #       $$
 #           params = [1.0, 0.0]
 #
-#           t_{p} & = m(t_{u}, *params)
-#                 & = m(t_{u}, w=params[0], b=params[1])
-#                 & = w \times t_{u} + b
-#                 & = params[0] \times t_{u} + params[1]
-#
-#           loss_fn(t_{p}, t_{c})               \\
-#                 & = (t_{p} - t_{c})^{2}
-#                 & = ((w \times t_{u} + b) - t_{c})^{2}
-#                 & = ((params[0] \times t_{u} + params[1]) - t_{c})^{2}
-#
+#           t_{p} & = m(t_{u}, *params)                                     \\
+#                 & = m(t_{u}, w=params[0], b=params[1])                    \\
+#                 & = w \times t_{u} + b                                    \\
+#                                                                           \\
+#                 \text{NOTE : $t_{u}$ is a vector}                         \\
+#                 & = params[0] \times t_{u} + params[1]                    \\
+#                                                                           \\
+#                                                                           \\
+#           loss_fn(t_{p}, t_{c}) & =                                       \\
+#                 \text{Expanding 'mean' to summation below}                \\
+#                 & = \frac{\sum_{i}^{N} (t_{pi} - t_{ci})^{2}}{N}          \\
+#                                                                           \\
+#                 \text{Substitute 'predicted' values from above}           \\
+#                 & = \frac{\sum_{i}^{N} ((w \times t_{ui} + b) - t_{ci})^{2}}{N}  \\
+#                 & = \frac{\sum_{i}^{N} ((params[0] \times t_{ui} + params[1]) - t_{ci})^{2}}{N} \\
 #       $$
 #
 #
 #   Compute Derivative w/r/t $w$
 #       $$
 #           \frac{d loss_fn}{dw} \\
-#                 & = \frac{d ((w \times t_{u} + b) - t_{c})^{2}}{dw}
-#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times \frac{d ((w \times t_{u} + b) - t_{c})}{dw}
-#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times t_{u}
-#
+#                 \text{Chain Rule}                                                \\
+#                 & = \frac{d loss_fn()}{d t_{pi}} \frac{d t_{pi}}{dw}             \\
+#                                                                                  \\
+#                 & = \frac{ d \frac{\sum_{i}^{N} ((t_{pi} - t_{ci})^{2})}{N}}{d t_{pi}} \frac{d t_{pi}}{dw}  \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \frac{t_{pi}}{dw} \\
+#                                                                                  \\
+#                 \text{Compute $\frac{t_{pi}}{dw}$}                               \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \frac{d (w \times t_{ui} + b)}{dw}  \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \times t_{ui}     \\
+#                                                                                  \\
+#                 \text{Subsitute for t_{pi}}                                      \\
+#                 & = \frac{\sum_{i}^{N} 2 ((w \times t_{ui} + b) - t_{ci})}{N} \times t_{ui}     \\
+#                                                                                  \\
+#                 \text{Let's collapse this back to the Python code notation}      \\
+#                 & = 2 * ((w * t_u + b - t_c) * t_u).mean()                  \\
+#                 & = 2 * ((params[0] * t_u + params[1] - t_c) * t_u).mean()                  \\
 #       $$
 #
 #
 #   Compute Derivative w/r/t $b$
 #       $$
 #           \frac{d loss_fn}{db} \\
-#                 & = \frac{d ((w \times t_{u} + b) - t_{c})^{2}}{db}
-#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times \frac{d ((w \times t_{u} + b) - t_{c})}{db}
-#                 & = 2 \times ((w \times t_{u} + b) - t_{c}) \times 1
+#                 \text{Chain Rule}                                                \\
+#                 & = \frac{d loss_fn()}{d t_{pi}} \frac{d t_{pi}}{db}             \\
+#                 & = \frac{ d \frac{\sum_{i}^{N} ((t_{pi} - t_{ci})^{2})}{N}}{d t_{pi}} \frac{d t_{pi}}{db}  \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \frac{t_{pi}}{db} \\
+#                                                                                  \\
+#                 \text{Compute $\frac{t_{pi}}{db}$}                               \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \frac{d (w \times t_{ui} + b)}{db}  \\
+#                 & = \frac{\sum_{i}^{N} 2 (t_{pi} - t_{ci})}{N} \times 1          \\
+#                 & = \frac{\sum_{i}^{N} 2 ((w \times t_{ui} + b) - t_{ci})}{N}    \\
+#                                                                                  \\
+#                 \text{Let's collapse this back to the Python code notation}      \\
+#                 & = 2 * (w * t_u + b - t_c).mean()
+#                 & = 2 * (params[0] * t_u + params[1] - t_c).mean()
 #       $$
 #
 #
@@ -83,7 +114,7 @@ loss.backward()
 #     \frac{d loss_fn}{dw} & = 2 \times ((w \times t_{u} + b) - t_{c}) \times t_{u}
 #                          & = 2 * ((params[0] * t_u + params[1]) - t_c) * t_u
 #                          & = ( 2 * ((params[0] * t_u + params[1]) - t_c) * t_u).mean()
-#                          & = 4517.2964
+#                          & = tensor(4517.2964, grad_fn=<MeanBackward0>)
 #   $$
 #
 # --> From above : derivative w/r/t $b$
@@ -91,12 +122,13 @@ loss.backward()
 #     \frac{d loss_fn}{dw} & = 2 \times ((w \times t_{u} + b) - t_{c}) \times 1
 #                          & = 2 * ( (params[0] * t_u + params[1]) - t_c).mean()
 #                          & = ((2 * ((params[0] * t_u + params[1]) - t_c))).mean()
-#                          & = 82.6
+#                          & = tensor(82.6000, grad_fn=<MulBackward0>)
 #   $$
 #
 # Now :
 #   (Pdb) p params.grad
 #   tensor([4517.2969,   82.6000])
+# --> It matches!
 params.grad
 
 

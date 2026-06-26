@@ -1261,8 +1261,9 @@ Chapter 5 : The mechanics of learning
             * When `loss.backward()` is called, PyTorch traverses the graph in the 
               reverse direction to compute the gradients
     #) QUESTION : 
-        * In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want the
-          direction?
+        * Q : In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want
+              the direction?
+            + A : We get the direction when we take the derivative, duh.
         * What happens if there is a daughter tensor who has two parents, one
           with `requires_grad=True` and the other is `requires_grad=False`
     #) QUESTION (20260527) : 
