@@ -1260,6 +1260,9 @@ Chapter 5 : The mechanics of learning
         #. ![Fig 5.10 - The forward graph and backward graph of the model as computed with autograd \label{fig5.10}](figs/fig_5.10.png)
             * When `loss.backward()` is called, PyTorch traverses the graph in the 
               reverse direction to compute the gradients
+            * QUESTION : 
+                + What does the notation $\bar{y}$ mean?  Usually in other books
+                  the 'bar' denoted a predicted value.
     #) QUESTION : 
         * Q : In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want
               the direction?
@@ -1277,6 +1280,45 @@ Chapter 5 : The mechanics of learning
         * tensor.backward() 'accumulates' the derivatives. Therefore at each 
           step in the loop, you very likely need to 'zero' it out.
     #) p125
+        * I've wasted so much time on this page trying t 
+    #) QUESTION : What are the details here of how the backward() calculation works?
+        * Asked Claude : 
+            I'm trying to understand how pytorch tracks the computing the
+            derivative of functions using the backward.  Please explain this and
+            include the low level details of what is going on behind the scenes
+        * Answer from Claude :
+            + The Core Idea: Dynamic Computational Graphs
+                - PyTorch builds a dynamic computational graph (DAG) as you run
+                  forward operations. Every Tensor with requires_grad=True
+                  participates in this graph. When you call .backward(), PyTorch
+                  traverses the graph in reverse, applying the chain rule.
+            + What a tensor actually holds
+                - data : the raw numerical values
+                - grad : accumulated gradient (populated after .backward())
+                - grad_fn : a reference to the Function node that created this
+                            tensor (or None if it's a leaf)
+            + Example
+                ```
+                (Pdb) x = torch.tensor([2.0], requires_grad=True)
+                (Pdb) y = x ** 2
+                (Pdb) z = y * 3
+                (Pdb) print(z.grad_fn)
+                <MulBackward0 object at 0x12f0e1b40>
+                (Pdb) print(z.grad_fn.next_functions)
+                ((<PowBackward0 object at 0x12f0e1d20>, 0), (None, 0))
+                (Pdb) print(z.grad_fn.next_functions[0][0].next_functions[0][0])
+                <AccumulateGrad object at 0x12f0e1a50>
+                ```
+            + Chain of `grad_fn` pointers is the computational graph
+            + There was lots of inconsistent non-sense as I went down this route
+              I gave up b/c I'm not spending my evening debugging an AI model's 
+              hallucinations
+
+
+
+
+
+
 
 
 
@@ -1303,7 +1345,24 @@ Replacing the linear model 158 Inspecting the parameters 159
 
 Chapter 7 : Telling birds from airplanes : Learning from images
 =============================================
-1. A dataset of tiny images 165
+1. Intro
+    a) So far, only have done simple regression model of one input and one output
+        #. 'Yawn'
+#. 7.1 : A dataset of tiny images 165
+    a) Datasets
+        #. MNIST 
+            * handwritten digit-recognition dataset
+        #. CIFAR-10 : 
+            * 60000 - tiny 32 x 32 color RGB images
+            * 10 classes - integer
+                + airplane (0), automobile (1), bird (2), cat (3), deer (4),
+                  dog (5), frog (6), horse (7), ship (8), truck (9)
+            & CIFAR = Canadian Institute for Advanced Research
+
+#. 7.1.1 : Downloading CIFAR-10
+    a) Downloaded from : https://cave.cs.toronto.edu/kriz/cifar.html
+
+
 Downloading CIFAR-10 166 The Dataset class 166
 Dataset transforms 168 Normalizing data 170
 #. Distinguishing birds from airplanes 172
