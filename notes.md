@@ -1362,6 +1362,13 @@ Chapter 7 : Telling birds from airplanes : Learning from images
 #. 7.1.1 : Downloading CIFAR-10
     a) Downloaded from : https://cave.cs.toronto.edu/kriz/cifar.html
 
+#. Hyperparameters
+    a) e.g. batch size, learning rate
+
+#. QUESTIONS
+    a) Are minibatches created with or without replacement?
+#. SKIMMED up to p 188
+
 
 Downloading CIFAR-10 166 The Dataset class 166
 Dataset transforms 168 Normalizing data 170

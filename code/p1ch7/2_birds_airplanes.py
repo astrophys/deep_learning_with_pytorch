@@ -162,6 +162,7 @@ n_epochs = 100
 
 for epoch in range(n_epochs):
     for img, label in cifar2:
+        # Forward pass
         out = model(img.view(-1).unsqueeze(0))
         loss = loss_fn(out, torch.tensor([label]))
 
@@ -246,7 +247,7 @@ with torch.no_grad():
         _, predicted = torch.max(outputs, dim=1)
         total += labels.shape[0]
         correct += int((predicted == labels).sum())
-        
+
 print("Accuracy: %f" % (correct / total))
 val_loader = torch.utils.data.DataLoader(cifar2_val, batch_size=64,
                                          shuffle=False)
@@ -260,7 +261,7 @@ with torch.no_grad():
         _, predicted = torch.max(outputs, dim=1)
         total += labels.shape[0]
         correct += int((predicted == labels).sum())
-        
+
 print("Accuracy: %f" % (correct / total))
 model = nn.Sequential(
             nn.Linear(3072, 1024),
