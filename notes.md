@@ -1376,11 +1376,21 @@ Chapter 5 : The mechanics of learning
                 2. Executes with ready queues: nodes whose dependency count hits
                    zero go into a ready queue and get executed by worker threads
                    (one per device — CPU graph work and each GPU's nodes are
-                   handled on their own thread; this is why backward can overlap across GPUs).
-                3. Runs each node: calling a node applies its apply() — e.g. MulBackward0::apply(grad_output) returns grad_output * saved_w and grad_output * saved_x, one gradient per input edge.
-                4. Routes gradients along edges: each output gradient is sent to the corresponding next_edge. If multiple paths flow into the same node (a tensor used twice), the engine sums the incoming gradients into an input buffer before the node runs — this is the multivariate chain rule happening mechanically.
-                5. Terminates at AccumulateGrad: which does leaf.grad += incoming (accumulation, which is why you call optimizer.zero_grad()).
-                6. Frees the graph: by default, saved tensors are released as nodes finish (retain_graph=False), so calling backward twice fails unless you opt out.
+                   handled on their own thread; this is why backward can overlap
+                   across GPUs).
+                3. Runs each node: calling a node applies its apply() — e.g.
+                   MulBackward0::apply(grad_output) returns grad_output * saved_w
+                   and grad_output * saved_x, one gradient per input edge.
+                4. Routes gradients along edges: each output gradient is sent to
+                   the corresponding next_edge. If multiple paths flow into the
+                   same node (a tensor used twice), the engine sums the incoming
+                   gradients into an input buffer before the node runs — this is
+                   the multivariate chain rule happening mechanically.
+                5. Terminates at AccumulateGrad: which does leaf.grad += incoming
+                   (accumulation, which is why you call optimizer.zero_grad()).
+                6. Frees the graph: by default, saved tensors are released as
+                   nodes finish (retain_graph=False), so calling backward twice
+                   fails unless you opt out.
             + Worked example
                 ```
                 # For z = 3x² with x = 2:
@@ -1388,11 +1398,24 @@ Chapter 5 : The mechanics of learning
                 MulBackward0: saved 3       → passes 1 * 3 = 3 to PowBackward0
                 PowBackward0: saved x, exp=2 → passes 3 * 2x = 3 * 4 = 12 to AccumulateGrad
                 AccumulateGrad: x.grad += 12
-            + Each node only ever computes a local derivative times the incoming gradient — no node knows the full function.
+                ```
+            + Each node only ever computes a local derivative times the incoming
+              gradient — no node knows the full function.
             + Important low-level details :
-                - Version counters and in-place ops. Every tensor has a version counter bumped on in-place mutation. When a SavedVariable is unpacked during backward, it checks that the version matches what was saved — if you mutated a tensor that backward needs, you get the famous "one of the variables needed for gradient computation has been modified by an inplace operation" error rather than silently wrong gradients.
-                - Memory cost. The saved tensors are the memory cost of training — activations are kept alive by the graph until backward consumes them. torch.utils.checkpoint trades compute for memory by not saving them and re-running the forward inside backward.
-                - Custom ops. torch.autograd.Function lets you define both halves yourself; ctx.save_for_backward(...) is the Python surface of the same SavedVariable machinery:
+                - Version counters and in-place ops. Every tensor has a version
+                  counter bumped on in-place mutation. When a SavedVariable is
+                  unpacked during backward, it checks that the version matches
+                  what was saved — if you mutated a tensor that backward needs,
+                  you get the famous "one of the variables needed for gradient
+                  computation has been modified by an inplace operation" error
+                  rather than silently wrong gradients.
+                - Memory cost. The saved tensors are the memory cost of training
+                  — activations are kept alive by the graph until backward
+                  consumes them. torch.utils.checkpoint trades compute for memory
+                  by not saving them and re-running the forward inside backward.
+                - Custom ops. torch.autograd.Function lets you define both halves
+                  yourself; ctx.save_for_backward(...) is the Python surface of
+                  the same SavedVariable machinery:
                     ```
                     class Square(torch.autograd.Function):
                         @staticmethod
@@ -1404,16 +1427,23 @@ Chapter 5 : The mechanics of learning
                             (x,) = ctx.saved_tensors
                             return grad_out * 2 * x
                     ```
-                - Dynamic ("define-by-run") graphs. The graph is rebuilt from scratch every forward pass, which is why Python control flow (loops, ifs, recursion) just works — autograd only ever sees the ops that actually executed.
-                - Higher-order gradients. backward(create_graph=True) makes the backward pass itself record a graph, so you can differentiate gradients (e.g. for Hessian-vector products).
-                - no_grad / inference mode. torch.no_grad() flips a thread-local flag so the autograd dispatch key is skipped — no nodes allocated, no tensors saved.
-                - If you want to poke at the machinery yourself, inspecting tensor.grad_fn.next_functions recursively, registering tensor.register_hook(fn) to watch gradients flow, and reading tools/autograd/derivatives.yaml in the PyTorch repo are the three best entry points.
+                - Dynamic ("define-by-run") graphs. The graph is rebuilt from
+                  scratch every forward pass, which is why Python control flow
+                  (loops, ifs, recursion) just works — autograd only ever sees
+                  the ops that actually executed.
+                - Higher-order gradients. backward(create_graph=True) makes the
+                  backward pass itself record a graph, so you can differentiate
+                  gradients (e.g. for Hessian-vector products).
+                - no_grad / inference mode. torch.no_grad() flips a thread-local
+                  flag so the autograd dispatch key is skipped — no nodes
+                  allocated, no tensors saved.
+                - If you want to poke at the machinery yourself, inspecting
+                  tensor.grad_fn.next_functions recursively, registering
+                  tensor.register_hook(fn) to watch gradients flow, and reading
+                  tools/autograd/derivatives.yaml in the PyTorch repo are the
+                  three best entry points.
 
 
-
-
-
-                ```
 
 
 
