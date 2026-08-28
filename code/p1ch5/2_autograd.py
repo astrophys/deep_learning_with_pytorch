@@ -1,4 +1,10 @@
 #%matplotlib inline
+#
+# Purpose :
+#   Here we have two thermometers, one in known values (in Celcius) and the other 
+#   in unknown units.  It is important to note that the data t_c and t_u
+#   are collected at the same points in time
+#
 import numpy as np
 import torch
 torch.set_printoptions(edgeitems=2)
@@ -9,6 +15,9 @@ t_c = torch.tensor([0.5, 14.0, 15.0, 28.0, 11.0, 8.0,
 # 'Unknown' values
 t_u = torch.tensor([35.7, 55.9, 58.2, 81.9, 56.3, 48.9,
                     33.9, 21.8, 48.4, 60.4, 68.4])
+
+# p120 - this is a cheap and easy way to have the values stay close to [-1,1]
+#   --> e.g. think regularize / normalize
 t_un = 0.1 * t_u
 
 
@@ -138,21 +147,42 @@ if params.grad is not None:
 
 def training_loop(n_epochs, learning_rate, params, t_u, t_c):
     for epoch in range(1, n_epochs + 1):
+        # Can be done at any point in the loop before calling loss.backward()
         if params.grad is not None:  # <1>\n",
             params.grad.zero_()
         t_p = model(t_u, *params)
         loss = loss_fn(t_p, t_c)
         loss.backward()
+
+        # This is a somewhat cumbersome bit of code
+        #   --> Context manager, disables gradient calculation
+        #   --> This is probably so we don't have it trying to track
+        #       the derivatives b/c here we are ACTUALLY using the derivatives
+        #   --> I.e. don't add edges to the forward graph
+        #   --> Usually this is wrapped up in 'optimizers' discussed in 5.5.4
         with torch.no_grad():  # <2>\n",
+            # Update params in place
+            # --> Usually don't want to do that b/c the autograd may need those
+            #     values for the backward pass (e.g. see derivation above)
+            # --> Not repl
+            #
+            # QUESTIONS :
+            #   1. Is the sign right?
+            #   2. A bit confused on how this impacts the autograd
             params -= learning_rate * params.grad
 
         if epoch % 500 == 0:
             print('Epoch %d, Loss %f' % (epoch, float(loss)))
     return params
 
-training_loop(
-    n_epochs = 5000,
-    learning_rate = 1e-2,
-    params = torch.tensor([1.0, 0.0], requires_grad=True), # <1>
-    t_u = t_un, # <2>
-    t_c = t_c)
+finalparams = training_loop(
+                n_epochs = 5000,
+                learning_rate = 1e-2,
+                params = torch.tensor([1.0, 0.0], requires_grad=True), # <1>
+                t_u = t_un, # <2>
+                t_c = t_c)
+
+# Final values = [5.3671, -17.3012]
+print(f'finalparams = {finalparams}')
+print(f't_un = {t_un}')
+print(f't_c = {t_c}')

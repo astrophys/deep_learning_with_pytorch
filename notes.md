@@ -1264,40 +1264,40 @@ Chapter 5 : The mechanics of learning
                 + What does the notation $\bar{y}$ mean?  Usually in other books
                   the 'bar' denoted a predicted value.
     #) QUESTION : 
-        * Q : In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want
+        #. Q : In code/p1ch5/2_autograd.py, why square the loss_fun()? Don't we want
               the direction?
-            + A : We get the direction when we take the derivative, duh.
-        * What happens if there is a daughter tensor who has two parents, one
-          with `requires_grad=True` and the other is `requires_grad=False`
+            * A : We get the direction when we take the derivative, duh.
+        #. What happens if there is a daughter tensor who has two parents, one
+           with `requires_grad=True` and the other is `requires_grad=False`
     #) QUESTION (20260527) : 
-        * I don't understand 5.10 given the derivatives that I calculated in 
-          code/p1ch5/2_autograd.py
+        #. I don't understand 5.10 given the derivatives that I calculated in 
+           code/p1ch5/2_autograd.py
             + Also, what does the yellow arrow mean?  The inverse operation?
-        * Where is the 'mean' in Fig 5.10
-        * Why in 5.10 a is $x$ requires_grad=False?
-        * Where is the 'mean' in fig 5.10?
+        #. Where is the 'mean' in Fig 5.10
+        #. Why in 5.10 a is $x$ requires_grad=False?
+        #. Where is the 'mean' in fig 5.10?
     #) GOTCHYA :
-        * tensor.backward() 'accumulates' the derivatives. Therefore at each 
-          step in the loop, you very likely need to 'zero' it out.
+        #. tensor.backward() 'accumulates' the derivatives. Therefore at each 
+           step in the loop, you very likely need to 'zero' it out.
     #) p125
-        * I've wasted so much time on this page trying t 
+        #. I've wasted so much time on this page trying t 
     #) QUESTION : What are the details here of how the backward() calculation works?
-        * Asked Claude : 
+        #. Asked Claude : 
             I'm trying to understand how pytorch tracks the computing the
             derivative of functions using the backward.  Please explain this and
             include the low level details of what is going on behind the scenes
-        * Answer from Claude (Sonnet 4.6) :
-            + The Core Idea: Dynamic Computational Graphs
-                - PyTorch builds a dynamic computational graph (DAG) as you run
+        #. Answer from Claude (Sonnet 4.6) :
+            * The Core Idea: Dynamic Computational Graphs
+                + PyTorch builds a dynamic computational graph (DAG) as you run
                   forward operations. Every Tensor with requires_grad=True
                   participates in this graph. When you call .backward(), PyTorch
                   traverses the graph in reverse, applying the chain rule.
-            + What a tensor actually holds
-                - data : the raw numerical values
-                - grad : accumulated gradient (populated after .backward())
-                - grad_fn : a reference to the Function node that created this
+            * What a tensor actually holds
+                + data : the raw numerical values
+                + grad : accumulated gradient (populated after .backward())
+                + grad_fn : a reference to the Function node that created this
                             tensor (or None if it's a leaf)
-            + Example
+            * Example
                 ```
                 (Pdb) x = torch.tensor([2.0], requires_grad=True)
                 (Pdb) y = x ** 2
@@ -1309,15 +1309,15 @@ Chapter 5 : The mechanics of learning
                 (Pdb) print(z.grad_fn.next_functions[0][0].next_functions[0][0])
                 <AccumulateGrad object at 0x12f0e1a50>
                 ```
-            + Chain of `grad_fn` pointers is the computational graph
-            + There was lots of inconsistent non-sense as I went down this route
+            * Chain of `grad_fn` pointers is the computational graph
+            * There was lots of inconsistent non-sense as I went down this route
               I gave up b/c I'm not spending my evening debugging an AI model's 
               hallucinations
-        * Answer from Claude (Fable 5) :
-            + PyTorch uses reverse-mode automatic differentiation with a
+        #. Answer from Claude (Fable 5) :
+            * PyTorch uses reverse-mode automatic differentiation with a
               dynamically built computation graph. Here's how it works from top to
               bottom.
-            + The core idea: build a graph during the forward pass
+            * The core idea: build a graph during the forward pass
               Every time you perform an operation on a tensor with
               requires_grad=True, PyTorch doesn't just compute the result — it also
               records how to compute the gradient of that operation, linking these
@@ -1330,12 +1330,12 @@ Chapter 5 : The mechanics of learning
                 print(z.grad_fn)                     # <MulBackward0>
                 print(z.grad_fn.next_functions)      # ((<PowBackward0>, 0),)
                 ```
-            + Each result tensor carries a grad_fn — a node representing the
+            * Each result tensor carries a grad_fn — a node representing the
               backward function of the op that produced it. The graph is made of
               these backward nodes, not the tensors themselves; tensors are just
               edges between nodes.
 
-            + What happens on every forward op. Low level, when you call something
+            * What happens on every forward op. Low level, when you call something
               like y = x * w:
                 1. Dispatch: The call goes through PyTorch's dispatcher. If any
                    input has requires_grad=True and grad mode is on, the
@@ -1359,16 +1359,16 @@ Chapter 5 : The mechanics of learning
                 6. Output annotation: The output tensor's grad_fn is set to
                    the new node, with an output_nr identifying which output
                    of the node it is.
-            + Leaf tensors (created by you, not by an op) have no grad_fn; instead
+            * Leaf tensors (created by you, not by an op) have no grad_fn; instead
               they get an AccumulateGrad node as their graph endpoint, whose job
               is to add incoming gradients into .grad.
-            + What .backward() actually does
+            * What .backward() actually does
                 - z.backward() is really torch.autograd.backward(z,
                   grad_tensors=torch.ones_like(z)) — you're seeding the output
                   gradient (this is why non-scalar outputs require an explicit
                   gradient argument: autograd computes vector–Jacobian products,
                   vᵀJ, never full Jacobians).
-            + The C++ engine (torch/csrc/autograd/engine.cpp) then:
+            * The C++ engine (torch/csrc/autograd/engine.cpp) then:
                 1. Builds a GraphTask: it does a quick traversal from the root
                    grad_fn to count, for each node, how many dependencies (incoming
                    gradients) it must wait for. This is effectively a
@@ -1391,7 +1391,7 @@ Chapter 5 : The mechanics of learning
                 6. Frees the graph: by default, saved tensors are released as
                    nodes finish (retain_graph=False), so calling backward twice
                    fails unless you opt out.
-            + Worked example
+            * Worked example
                 ```
                 # For z = 3x² with x = 2:
                 seed: dz/dz = 1
@@ -1399,21 +1399,21 @@ Chapter 5 : The mechanics of learning
                 PowBackward0: saved x, exp=2 → passes 3 * 2x = 3 * 4 = 12 to AccumulateGrad
                 AccumulateGrad: x.grad += 12
                 ```
-            + Each node only ever computes a local derivative times the incoming
+            * Each node only ever computes a local derivative times the incoming
               gradient — no node knows the full function.
-            + Important low-level details :
-                - Version counters and in-place ops. Every tensor has a version
+            * Important low-level details :
+                + Version counters and in-place ops. Every tensor has a version
                   counter bumped on in-place mutation. When a SavedVariable is
                   unpacked during backward, it checks that the version matches
                   what was saved — if you mutated a tensor that backward needs,
                   you get the famous "one of the variables needed for gradient
                   computation has been modified by an inplace operation" error
                   rather than silently wrong gradients.
-                - Memory cost. The saved tensors are the memory cost of training
+                + Memory cost. The saved tensors are the memory cost of training
                   — activations are kept alive by the graph until backward
                   consumes them. torch.utils.checkpoint trades compute for memory
                   by not saving them and re-running the forward inside backward.
-                - Custom ops. torch.autograd.Function lets you define both halves
+                + Custom ops. torch.autograd.Function lets you define both halves
                   yourself; ctx.save_for_backward(...) is the Python surface of
                   the same SavedVariable machinery:
                     ```
@@ -1427,24 +1427,28 @@ Chapter 5 : The mechanics of learning
                             (x,) = ctx.saved_tensors
                             return grad_out * 2 * x
                     ```
-                - Dynamic ("define-by-run") graphs. The graph is rebuilt from
+                + Dynamic ("define-by-run") graphs. The graph is rebuilt from
                   scratch every forward pass, which is why Python control flow
                   (loops, ifs, recursion) just works — autograd only ever sees
                   the ops that actually executed.
-                - Higher-order gradients. backward(create_graph=True) makes the
+                + Higher-order gradients. backward(create_graph=True) makes the
                   backward pass itself record a graph, so you can differentiate
                   gradients (e.g. for Hessian-vector products).
-                - no_grad / inference mode. torch.no_grad() flips a thread-local
+                + no_grad / inference mode. torch.no_grad() flips a thread-local
                   flag so the autograd dispatch key is skipped — no nodes
                   allocated, no tensors saved.
-                - If you want to poke at the machinery yourself, inspecting
+                + If you want to poke at the machinery yourself, inspecting
                   tensor.grad_fn.next_functions recursively, registering
                   tensor.register_hook(fn) to watch gradients flow, and reading
                   tools/autograd/derivatives.yaml in the PyTorch repo are the
                   three best entry points.
-
-
-
+        #. At this point (2026-08-21), I'm just going to accept that this is
+           hard to understand and that it is working as expected.  Hopefully, 
+           some day I will understand this, but at this point I just need to move
+           on
+    #) Onto p126
+        #. Reviewing code/p1ch5/2_autograd.py
+            * See code for additional notes / details
 
 
 #. TO DO :
