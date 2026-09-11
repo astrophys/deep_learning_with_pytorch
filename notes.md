@@ -101,7 +101,7 @@ Chapter 1 : Introducing deep learning and the Pytorch Library
         #. Provides Tensor data structure
         #. Provides ability of tracking operations done on Tensors and track their 
            derivatives
-            * 'autograd' engine under the hoold
+            * 'autograd' engine under the hood
     #) torch.nn
         #. Core of pytorch, provides
             * NN layers, fully connected layers, convolutional layers,
@@ -1449,12 +1449,25 @@ Chapter 5 : The mechanics of learning
     #) Onto p126
         #. Reviewing code/p1ch5/2_autograd.py
             * See code for additional notes / details
+        #. QUESTION : From the text "When using autograd, we usually avoid
+                      inplace updates because PyTorch’s autograd engine might
+                      need the values we would be modifying for the backward pass."
+                      Why would this matter b/c we already called the backward pass?
+            * Shrug
+#. 5.5.2 - Optimizers a la carte
+    a) See : class `torch.optim` 
+    #) ![Fig 5.11 - Conceptual Diagram of Optimizers\label{fig5.11}](figs/fig_5.11.png)
+        #. Each optimizer exposes two methods
+            * `zero_grad()` and `step()`
+    
+    #) See : code/p1ch5/3_optimizers.py for example of using a gradient descent
+             optimizer
+    #) stopped on 139
 
 
 #. TO DO :
-    a) Answer why .sum is at end of grad function above...
-        #. 20260424 - already answered?
     #) Derive how logic would work for pytorch to do back propagation
+    #) 20260904 - test if params.grad.zero_() sets it to zero for ALL leafs
 
 
 Chapter 6 : Using a nerual network to fit the data 

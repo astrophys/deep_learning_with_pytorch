@@ -1,10 +1,28 @@
 #%matplotlib inline
 #
 # Purpose :
-#   Here we have two thermometers, one in known values (in Celcius) and the other 
+#   Here we have two thermometers, one in known values (in Celcius) and the other
 #   in unknown units.  It is important to note that the data t_c and t_u
-#   are collected at the same points in time
+#   are collected at the same points in time.
 #
+#   So basically, this model is providing the slope and offset of the 'unknown'
+#   values.
+#
+#   Output of this code converges to : params = tensor([  5.3671, -17.3012])
+#       Equation for converting Fareinheit to Celcius is
+#        $$
+#           T_{C}   &= (T_{F} - 32) \times \frac{5}{9} \\
+#                   &= (T_{F} - 32) \times \frac{5}{9} \\
+#                   &= \frac{5}{9} T_{F} - 17.7 \\
+#        $$
+#           #. Note that our final params are $[w,b] = [5.3671, -17.3012]$.
+#           #. We need to divide our $w$ by 10 and we get close to $\frac{5}{9}$
+#           #. w = 5/9 * 10 = 5.5
+#
+#   QUESTIONS :
+#       1. Shouldn't we also 'normalize' the data for t_c?
+#           --> Probably, but from the text (p122), this is the crucial step
+#               that leads to the values above being derived.
 import numpy as np
 import torch
 torch.set_printoptions(edgeitems=2)
