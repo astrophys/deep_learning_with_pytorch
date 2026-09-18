@@ -17,6 +17,7 @@
 #           #. We need to divide our $w$ by 10 and we get close to $\frac{5}{9}$
 #           #. w = 5/9 * 10 = 5.5
 #
+#
 import torch
 import numpy as np
 import torch.optim as optim
@@ -47,9 +48,19 @@ print(f'Available Optimizers:')
 for item in dir(optim):
     print(f'\t{item}')
 
+###########
+###########
+# This section illustrates that optimizer updates params w/o
+# having to manipulate it by hand, like we did in 2_autograd.py
+# recall :
+#       with torch.no_grad():
+#           params -= learning_rate * params.grad
+print(f'\n\nUsing raw unknown data (t_u) w/ single update from optimzer: ')
 params = torch.tensor([1.0, 0.0], requires_grad=True)
-print(f'params = {params}')
 learning_rate = 1e-5
+print(f'    params = {params}')
+print(f'    learning_rate = {learning_rate}')
+print(f'    optimizer = optimizer.SGD')
 
 # SGD = Stochastic Gradient Descent
 #   --> if momentum = 0 [default], it is vanilla gradient descent
@@ -64,57 +75,119 @@ t_p = model(t_u, *params)
 loss = loss_fn(t_p, t_c)
 loss.backward()
 
+# See : updates params w/o 'torch.no_grad()'
 optimizer.step()
 
-print(f'params = {params}')
+print(f'    (post-update using t_u);\n        params = {params}')
+###########
+###########
 
+
+###########
+###########
+# Redo same experiment with 'normalized' unknown data and different learning_rate
+#  --> Don't forget to zero out the gradients for optimizer
+#  --> This chunk, would be 'loop' ready
 params = torch.tensor([1.0, 0.0], requires_grad=True)
 learning_rate = 1e-2
+print(f'\n\nNow using "normalized" unknown data (t_un), reset params/lr : ')
+print(f'    params = {params}')
+print(f'    learning_rate = {learning_rate}')
+print(f'    optimizer = optimizer.SGD')
 optimizer = optim.SGD([params], lr=learning_rate)
 
 t_p = model(t_un, *params)
 loss = loss_fn(t_p, t_c)
 
-optimizer.zero_grad() # <1>
+# Exact placement of zero_grad() is somewhat arbitrary
+optimizer.zero_grad()
 loss.backward()
 optimizer.step()
 
-params
+print(f'    (post-update using t_un);\n        params = {params}')
+print(f'\n\n')
+###########
+###########
+
+
+
+
+###########
+###########
+print(f'Now do a training loop with optim.SGD and pseudo-normalized unknown data:')
+# Now we can abstract away the specific optimization scheme
 def training_loop(n_epochs, optimizer, params, t_u, t_c):
     for epoch in range(1, n_epochs + 1):
         t_p = model(t_u, *params)
         loss = loss_fn(t_p, t_c)
 
+        # p129 - Recall we need to reset gradient, this is just how
+        #        derivatives accumulate in pytorch
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         if epoch % 500 == 0:
-            print('Epoch %d, Loss %f' % (epoch, float(loss)))
+            print('    Epoch %d, Loss %f' % (epoch, float(loss)))
 
     return params
 
 params = torch.tensor([1.0, 0.0], requires_grad=True)
 learning_rate = 1e-2
-optimizer = optim.SGD([params], lr=learning_rate) # <1>
+print(f'    params = {params}')
+print(f'    learning_rate = {learning_rate}')
+print(f'    optimizer = optimizer.SGD')
+## IMPORTANT - Crutial that 'params' used to initilize the optimizer is the
+##             same as passed below in training loop
+optimizer = optim.SGD([params], lr=learning_rate)
 
 training_loop(
     n_epochs = 5000,
     optimizer = optimizer,
-    params = params, # <1>
+    ## IMPORTANT - Crutial this is same 'params' used to initilize the optimizer
+    ##             b/c this params is used by the model and loss_fn where the
+    ##             gradient gets computed.
+    params = params,
+    ## use pseudo-normalized unknown data
     t_u = t_un,
     t_c = t_c)
 
+
+print(f'    params = {params}')
+print(f'\n\n')
+###########
+###########
+
+
+
+###########
+###########
+# Try with different optimizer with more aggressive learning rate :
+# About Adam optimizer :
+#    --> more sophisticated optimizer
+#    --> which the learning rate is set adaptively
+#    --> It is a lot less senistive to scaling of the parameters
+sensitive to the scaling of the parameters—so insensitive that we can go back to using
+print(f'Now do a training loop with optim.Adam and RAW unknown data:')
 params = torch.tensor([1.0, 0.0], requires_grad=True)
 learning_rate = 1e-1
 optimizer = optim.Adam([params], lr=learning_rate) # <1>
+print(f'    params = {params}')
+print(f'    learning_rate = {learning_rate}')
+print(f'    optimizer = optim.Adam')
 
 training_loop(
     n_epochs = 2000,
     optimizer = optimizer,
     params = params,
+    ## Agressive...using non-normalized data b/c Adam optimizer doesn't care
     t_u = t_u, # <2>
     t_c = t_c)
+
+print(f'    params = {params}')
+print(f'\n\n')
+###########
+###########
 
 
 n_samples = t_u.shape[0]

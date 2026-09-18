@@ -178,7 +178,7 @@ def training_loop(n_epochs, learning_rate, params, t_u, t_c):
         #       the derivatives b/c here we are ACTUALLY using the derivatives
         #   --> I.e. don't add edges to the forward graph
         #   --> Usually this is wrapped up in 'optimizers' discussed in 5.5.4
-        with torch.no_grad():  # <2>\n",
+        with torch.no_grad():
             # Update params in place
             # --> Usually don't want to do that b/c the autograd may need those
             #     values for the backward pass (e.g. see derivation above)
@@ -197,7 +197,7 @@ finalparams = training_loop(
                 n_epochs = 5000,
                 learning_rate = 1e-2,
                 params = torch.tensor([1.0, 0.0], requires_grad=True), # <1>
-                t_u = t_un, # <2>
+                t_u = t_un,
                 t_c = t_c)
 
 # Final values = [5.3671, -17.3012]
