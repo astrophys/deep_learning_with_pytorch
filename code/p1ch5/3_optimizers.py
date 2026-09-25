@@ -167,7 +167,6 @@ print(f'\n\n')
 #    --> more sophisticated optimizer
 #    --> which the learning rate is set adaptively
 #    --> It is a lot less senistive to scaling of the parameters
-sensitive to the scaling of the parameters—so insensitive that we can go back to using
 print(f'Now do a training loop with optim.Adam and RAW unknown data:')
 params = torch.tensor([1.0, 0.0], requires_grad=True)
 learning_rate = 1e-1
@@ -190,6 +189,8 @@ print(f'\n\n')
 ###########
 
 
+
+########## 5.5.3 Training, validation, and overfitting ##########
 n_samples = t_u.shape[0]
 n_val = int(0.2 * n_samples)
 
